@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Arroyo POS — tell us about your shop</title>
+<meta name="description" content="A few details about your shop so your Arroyo POS opens on your own products on day one."/>
+<meta name="theme-color" content="#0F5C4D"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --paper:#F7F8F6; --card:#FFFFFF; --sink:#EFF2EF;
+  --ink:#14201F; --ink2:#55635F; --ink3:#8A9793;
+  --rule:#DDE3E0; --rule2:#C6CFCB;
+  --pine:#0F5C4D; --pine-soft:#E6F0EC;
+  --bronze:#8A5B12; --bronze-soft:#FBF2E2;
+  --bad:#9E2B20; --bad-soft:#FBEBE9;
+  --ok:#1C6B3F;
+  --ui:'Instrument Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --mono:'DM Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--ui);font-size:15.5px;line-height:1.55;
+  background-image:linear-gradient(180deg,#EDF1EE 0,var(--paper) 340px)}
+.wrap{max-width:660px;margin:0 auto;padding:36px 20px 72px}
+
+/* ── receipt hero ───────────────────────────────────────── */
+.mast{margin-bottom:26px}
+.mast h1{font-size:30px;line-height:1.15;font-weight:600;letter-spacing:-.021em;max-width:19ch}
+.mast p{margin-top:10px;color:var(--ink2);max-width:52ch}
+.roll{background:var(--card);border-radius:3px;margin:22px 0 30px;
+  box-shadow:0 1px 0 var(--rule2),0 14px 28px -20px rgba(20,32,31,.45);position:relative}
+.roll::before,.roll::after{content:'';position:absolute;left:0;right:0;height:7px;
+  background:radial-gradient(circle at 5px 0,transparent 5px,var(--card) 5.5px) 0 0/11px 7px repeat-x}
+.roll::before{top:-6px;transform:rotate(180deg)}
+.roll::after{bottom:-6px}
+.roll-bar{height:34px;border-radius:3px 3px 0 0;display:flex;align-items:center;padding:0 12px;
+  font-size:11.5px;font-weight:600;letter-spacing:.02em;transition:background .25s}
+.rcpt{font-family:var(--mono);padding:16px 18px 20px;font-size:12.5px;line-height:1.85;color:#22312F}
+.rcpt-name{text-align:center;font-weight:500;font-size:15px;letter-spacing:.14em;word-break:break-word}
+.rcpt-loc{text-align:center;color:var(--ink3);font-size:11px;letter-spacing:.04em;margin-top:2px}
+.rcpt-hr{border-top:1px dashed var(--rule2);margin:11px 0}
+.rcpt-row{display:flex;justify-content:space-between;gap:12px}
+.rcpt-row span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rcpt-row.tot{font-weight:500;padding-top:2px}
+.rcpt-q{margin-top:13px;border:1px dashed currentColor;border-radius:4px;padding:9px;text-align:center;transition:color .25s}
+.rcpt-q small{display:block;font-size:10px;letter-spacing:.2em;opacity:.75}
+.rcpt-q b{display:block;font-size:26px;font-weight:500;letter-spacing:.06em;line-height:1.25}
+.roll-cap{border-top:1px dashed var(--rule);padding:9px 14px;font-size:11.5px;color:var(--ink3)}
+
+/* ── sections ───────────────────────────────────────────── */
+.sec{padding:26px 0;border-top:1px dashed var(--rule2)}
+.sec:first-of-type{border-top:none;padding-top:0}
+.sec > h2{font-size:19px;font-weight:600;letter-spacing:-.012em}
+.sec > h2 + .lede{margin-top:5px;color:var(--ink2);font-size:14.5px;max-width:56ch}
+.sec-body{margin-top:16px}
+
+.f{margin-bottom:15px}
+.f > label,.lbl{display:block;font-size:13.5px;font-weight:600;margin-bottom:5px}
+.opt{font-weight:400;color:var(--ink3)}
+.star{color:var(--pine)}
+input[type=text],input[type=email],input[type=tel],input[type=number],select,textarea{
+  width:100%;font-family:var(--ui);font-size:15.5px;color:var(--ink);background:var(--card);
+  border:1px solid var(--rule2);border-radius:7px;padding:11px 12px;outline:none;
+  transition:border-color .15s,box-shadow .15s;-webkit-appearance:none;appearance:none}
+select{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'><path d='M1 1l4.5 4.5L10 1' fill='none' stroke='%2355635F' stroke-width='1.6' stroke-linecap='round'/></svg>");
+  background-repeat:no-repeat;background-position:right 13px center;padding-right:36px}
+textarea{font-family:var(--mono);font-size:13.5px;line-height:1.85;resize:vertical}
+:is(input,select,textarea):focus{border-color:var(--pine);box-shadow:0 0 0 3px var(--pine-soft)}
+:is(input,select,textarea,button,a):focus-visible{outline:2px solid var(--pine);outline-offset:2px}
+.hint{font-size:12.5px;color:var(--ink3);margin-top:5px;line-height:1.5}
+.hint code,.lede code,.sheet code{font-family:var(--mono);font-size:.9em;background:var(--sink);
+  padding:1px 5px;border-radius:4px;color:var(--ink)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* checkbox rows */
+.chk{display:flex;gap:11px;align-items:flex-start;cursor:pointer;padding:11px 12px;
+  border:1px solid var(--rule2);border-radius:7px;background:var(--card);margin-bottom:12px}
+.chk input{width:18px;height:18px;flex-shrink:0;margin-top:1px;accent-color:var(--pine);cursor:pointer}
+.chk b{display:block;font-size:14px;font-weight:600}
+.chk span span{display:block;font-size:12.5px;color:var(--ink3);margin-top:2px;line-height:1.5}
+
+/* menu box */
+.menu-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:9px}
+#menuStatus{font-family:var(--mono);font-size:12.5px;color:var(--ink3);flex:1;min-width:210px}
+#menuStatus.ok{color:var(--ok)}
+#menuStatus.err{color:var(--bad)}
+.ghost{font-family:var(--ui);font-size:13px;font-weight:600;color:var(--ink);background:var(--card);
+  border:1px solid var(--rule2);border-radius:7px;padding:8px 13px;cursor:pointer;transition:border-color .15s,background .15s}
+.ghost:hover{border-color:var(--pine);background:var(--pine-soft)}
+
+/* colour picker */
+.swatches{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.sw{width:30px;height:30px;border-radius:7px;border:1px solid var(--rule2);cursor:pointer;padding:0;transition:transform .12s}
+.sw:hover{transform:scale(1.08)}
+.sw[aria-pressed=true]{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--pine)}
+input[type=color]{width:46px;height:38px;padding:3px;border:1px solid var(--rule2);border-radius:7px;background:var(--card);cursor:pointer;flex-shrink:0}
+
+/* notes */
+.flag{background:var(--bronze-soft);border-left:3px solid var(--bronze);border-radius:0 7px 7px 0;
+  padding:11px 13px;font-size:13.5px;line-height:1.6;color:#4A3208;margin-bottom:15px}
+.na{background:var(--sink);border-radius:7px;padding:12px 14px;font-size:13.5px;color:var(--ink2);line-height:1.6}
+.sheet{background:var(--sink);border-radius:9px;padding:16px 18px}
+.sheet h3{font-size:14px;font-weight:600;margin-bottom:8px}
+.sheet ul{list-style:none;font-size:13.5px;color:var(--ink2);line-height:1.75}
+.sheet li{padding-left:16px;position:relative}
+.sheet li::before{content:'';position:absolute;left:3px;top:.68em;width:5px;height:5px;border-radius:50%;background:var(--rule2)}
+.hidden{display:none !important}
+
+/* faq */
+.faq{border-top:1px dashed var(--rule2);padding-top:26px;margin-bottom:30px}
+.faq > h2{font-size:19px;font-weight:600;letter-spacing:-.012em}
+.faq > p{margin-top:5px;color:var(--ink2);font-size:14.5px;max-width:56ch}
+.qs{margin-top:14px;border-top:1px solid var(--rule)}
+.q{border-bottom:1px solid var(--rule)}
+.q > summary{list-style:none;cursor:pointer;display:flex;gap:12px;align-items:flex-start;
+  padding:13px 2px;font-size:14.5px;font-weight:500;line-height:1.5}
+.q > summary::-webkit-details-marker{display:none}
+.q > summary::before{content:'+';flex-shrink:0;width:18px;font-family:var(--mono);font-size:15px;
+  color:var(--pine);line-height:1.45;text-align:center}
+.q[open] > summary::before{content:'\2013'}
+.q[open] > summary{color:var(--pine)}
+.q > summary:hover{color:var(--pine)}
+.q-a{padding:0 2px 15px 32px;font-size:14px;color:var(--ink2);line-height:1.65;max-width:62ch}
+.q-a p + p{margin-top:9px}
+.q-a b{color:var(--ink);font-weight:600}
+
+/* actions */
+.send{width:100%;font-family:var(--ui);font-size:16.5px;font-weight:600;color:#fff;background:var(--pine);
+  border:none;border-radius:8px;padding:15px;cursor:pointer;transition:background .15s}
+.send:hover{background:#0B4A3E}
+.send:disabled{background:var(--ink3);cursor:default}
+.alts{display:flex;gap:10px;margin-top:11px}
+.alts > *{flex:1;text-align:center;text-decoration:none;font-family:var(--ui);font-size:13.5px;font-weight:600;
+  color:var(--ink2);background:transparent;border:1px solid var(--rule2);border-radius:7px;padding:11px;cursor:pointer}
+.alts > *:hover{border-color:var(--pine);color:var(--pine)}
+.msg{margin-top:14px;border-radius:8px;padding:13px 15px;font-size:14px;line-height:1.6;display:none}
+.msg.show{display:block}
+.msg.ok{background:#EAF3EC;color:#17512F;border-left:3px solid var(--ok)}
+.msg.err{background:var(--bad-soft);color:#6E1E16;border-left:3px solid var(--bad)}
+.msg.busy{background:var(--sink);color:var(--ink2)}
+.msg b{font-weight:600}
+.foot{margin-top:22px;font-size:12.5px;color:var(--ink3);line-height:1.6;text-align:center}
+@media (max-width:620px){
+  .wrap{padding:26px 16px 56px}
+  .mast h1{font-size:25px}
+  .pair{grid-template-columns:1fr}
+  .alts{flex-direction:column}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="mast">
+    <h1>Tell us about your shop</h1>
+    <p>Your till gets set up from these answers, so it opens on your own products and prices instead of a demo list. Nothing technical here &mdash; Reymar handles all of that. Two answers are needed, the rest you can leave blank.</p>
+  </header>
+
+  <!-- live receipt -->
+  <div class="roll" aria-hidden="true">
+    <div class="roll-bar" id="rollBar">Your POS</div>
+    <div class="rcpt">
+      <div class="rcpt-name" id="rName">YOUR SHOP NAME</div>
+      <div class="rcpt-loc" id="rLoc"></div>
+      <div class="rcpt-hr"></div>
+      <div id="rLines">
+        <div class="rcpt-row"><span>Your first product</span><span>0.00</span></div>
+      </div>
+      <div class="rcpt-hr"></div>
+      <div class="rcpt-row tot"><span>TOTAL</span><span id="rTot">0.00</span></div>
+      <div class="rcpt-q hidden" id="rQueue"><small>NOW SERVING</small><b id="rQnum">24</b></div>
+    </div>
+    <div class="roll-cap">A receipt from your shop, as you fill this in.</div>
+  </div>
+
+  <form id="f" novalidate>
+
+    <section class="sec" data-sec="Your shop">
+      <h2>Your shop</h2>
+      <p class="lede">This name prints on every receipt, so spell it exactly as you want customers to see it.</p>
+      <div class="sec-body">
+        <div class="f">
+          <label for="bizName">Shop name <span class="star">&#9733;</span></label>
+          <input type="text" id="bizName" data-label="Shop name" data-dep="bizName" placeholder="Reyes Cafe" required autocomplete="organization"/>
+        </div>
+        <div class="f">
+          <label for="bizType">What kind of shop is it</label>
+          <select id="bizType" data-label="Shop type" data-dep="bizType">
+            <option value="cafe">Cafe / Coffee shop</option>
+            <option value="restaurant">Restaurant / Food</option>
+            <option value="bakery">Bakery / Pastry</option>
+            <option value="sari-sari">Sari-sari store</option>
+            <option value="apparel">Clothing / Apparel</option>
+            <option value="salon">Salon / Barbershop</option>
+            <option value="pharmacy">Pharmacy</option>
+            <option value="grocery">Grocery / Market</option>
+            <option value="custom">Something else</option>
+          </select>
+          <p class="hint">Sets which screens you get. A cafe, restaurant or bakery also gets a waiting queue.</p>
+        </div>
+        <div class="pair">
+          <div class="f">
+            <label for="ownerName">Owner&rsquo;s name</label>
+            <input type="text" id="ownerName" data-label="Owner name" data-dep="ownerName" placeholder="Juan Reyes" autocomplete="name"/>
+          </div>
+          <div class="f">
+            <label for="ownerEmail">Owner&rsquo;s email <span class="star">&#9733;</span></label>
+            <input type="email" id="ownerEmail" data-label="Owner email" data-dep="ownerEmail" placeholder="juan@email.com" required autocomplete="email" autocapitalize="none" spellcheck="false"/>
+          </div>
+        </div>
+        <div class="flag">This email becomes your sign-in for the till, so it has to be your own address &mdash; not a shared one and not Reymar&rsquo;s. Use one you can still open in a year.</div>
+        <div class="pair">
+          <div class="f">
+            <label for="ownerPhone">Contact number</label>
+            <input type="tel" id="ownerPhone" data-label="Contact number" placeholder="0917 000 0000" autocomplete="tel"/>
+          </div>
+          <div class="f">
+            <label for="bizLoc">Shop address <span class="opt">(optional)</span></label>
+            <input type="text" id="bizLoc" data-label="Shop address" data-dep="bizLoc" placeholder="Davao City" autocomplete="street-address"/>
+            <p class="hint">Prints under the shop name.</p>
+          </div>
+        </div>
+        <div class="f">
+          <label for="signatory">Who signs the agreement <span class="opt">(only if not the owner above)</span></label>
+          <input type="text" id="signatory" data-label="Signing for the shop" placeholder="Leave blank if it is the owner"/>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec" data-sec="Products">
+      <h2>What you sell</h2>
+      <p class="lede">Type your real menu and the till opens on it, already priced. Skip this and you get a sample list to edit later &mdash; but doing it now saves a long evening of typing.</p>
+      <div class="sec-body">
+        <div class="f">
+          <label for="starterProducts">One product per line: name, price, category, stock</label>
+          <textarea id="starterProducts" data-label="Products" data-dep="starterProducts" rows="10" spellcheck="false" autocapitalize="none"
+            placeholder="Pandesal, 5, Bread, 300&#10;Ensaymada, 35, Bread, 60&#10;Ube cake slice, 85, Cake, 20&#10;Brewed coffee, 45, Drinks"></textarea>
+          <p class="hint">Category and stock are optional &mdash; leave stock out and the till never says you have run out. If a product name has a comma in it, separate that whole line with <code>|</code> instead. A line starting with <code>#</code> is ignored, so you can leave yourself notes.</p>
+        </div>
+        <div class="menu-foot">
+          <div id="menuStatus" role="status" aria-live="polite">Nothing yet &mdash; a sample list will be used.</div>
+          <button type="button" class="ghost" id="sampleBtn">Start from a sample</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec" data-sec="Look">
+      <h2>How it should look</h2>
+      <p class="lede">Pick the colour of your till screen. Light or dark both work &mdash; the text stays readable either way.</p>
+      <div class="sec-body">
+        <div class="f">
+          <span class="lbl">Screen colour</span>
+          <div class="swatches" id="swatches">
+            <input type="color" id="themeColor" data-label="Screen colour" data-dep="themeColor" value="#111110" aria-label="Pick any colour"/>
+          </div>
+        </div>
+        <label class="chk" for="hasLogo">
+          <input type="checkbox" id="hasLogo" data-label="Has a logo to send"/>
+          <span><b>I have a logo for the shop</b><span>Email the picture to Reymar separately &mdash; a form cannot carry files. PNG, JPG or SVG, the bigger the better.</span></span>
+        </label>
+        <div class="f">
+          <label for="dailyGoal">Daily sales target in pesos <span class="opt">(optional)</span></label>
+          <input type="number" id="dailyGoal" data-label="Daily sales target (PHP)" data-dep="dailyGoal" min="0" step="1" placeholder="5000" inputmode="numeric"/>
+          <p class="hint">The till shows a progress bar against this. A rough figure is fine and it can be changed anytime.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec" data-sec="Receipts">
+      <h2>Printing receipts</h2>
+      <p class="lede">Only matters if you have or plan to buy a small thermal receipt printer.</p>
+      <div class="sec-body">
+        <div class="f">
+          <label for="hasPrinter">Do you have a receipt printer</label>
+          <select id="hasPrinter" data-label="Has a receipt printer">
+            <option value="Yes, already have one">Yes, already have one</option>
+            <option value="Buying one soon">Buying one soon</option>
+            <option value="No, no printed receipts">No, no printed receipts</option>
+          </select>
+        </div>
+        <div id="printFields">
+          <div class="f">
+            <label for="thermalWidth">Paper roll width</label>
+            <select id="thermalWidth" data-label="Paper roll width" data-dep="thermalWidth">
+              <option value="58">58 mm &mdash; the usual size</option>
+              <option value="80">80 mm &mdash; wide</option>
+            </select>
+            <p class="hint">Printed on the side of the roll. If you are unsure, 58 mm is nearly always right.</p>
+          </div>
+          <label class="chk" for="autoPrint">
+            <input type="checkbox" id="autoPrint" data-label="Print automatically after each sale" data-dep="autoPrint"/>
+            <span><b>Print automatically after every sale</b><span>Off by default, so staff tap Print only when a customer asks. Turn it on for a busy counter.</span></span>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec" data-sec="Queue" id="queueSec">
+      <h2>Waiting queue</h2>
+      <p class="lede">Every sale takes the next number for the day and it prints big on the receipt. Staff tap <b>Ready</b> when the order is done, and a screen on the wall shows the number and calls it out.</p>
+      <div class="sec-body">
+        <div class="na hidden" id="queueNA">Not offered for this kind of shop &mdash; a queue only helps where customers wait for something to be made. Pick cafe, restaurant or bakery above if you need one.</div>
+        <div id="queueFields">
+          <label class="chk" for="queueOn">
+            <input type="checkbox" id="queueOn" data-label="Use a waiting queue" data-dep="queueOn" checked/>
+            <span><b>Yes, use a waiting queue</b><span>Adds the wall screen and the Queue tab on the till.</span></span>
+          </label>
+          <div class="pair">
+            <div class="f">
+              <label for="queuePrefix">Letters before the number <span class="opt">(optional)</span></label>
+              <input type="text" id="queuePrefix" data-label="Queue prefix" data-dep="queuePrefix" maxlength="4" placeholder="ARK" autocapitalize="characters" spellcheck="false"/>
+              <p class="hint">Gives you ARK&#8209;1, ARK&#8209;2 and so on. Type <b>ARK</b>, not ARK&#8209; &mdash; the dash is added for you. Up to 4 letters. Leave blank for plain numbers.</p>
+            </div>
+            <div class="f">
+              <label for="queueVoice">Call the numbers out loud</label>
+              <select id="queueVoice" data-label="Call numbers out loud" data-dep="queueVoice">
+                <option value="Yes">Yes, speak them</option>
+                <option value="No">No, show them only</option>
+              </select>
+              <p class="hint">Can be muted on the wall screen itself.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec" data-sec="Anything else">
+      <h2>Anything else</h2>
+      <p class="lede">How many people will use the till, when you want to open on it, a discount you always give, anything that matters.</p>
+      <div class="sec-body">
+        <div class="f">
+          <label for="notes">Notes for Reymar</label>
+          <textarea id="notes" data-label="Notes" rows="4" style="font-family:var(--ui);font-size:15.5px;line-height:1.6" placeholder="Two cashiers. We give 10% off for seniors. Hoping to start using it by the 1st."></textarea>
+        </div>
+      </div>
+    </section>
+
+    <input type="text" name="_honey" id="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;opacity:0;height:0"/>
+
+    <section class="faq">
+      <h2>Before you send</h2>
+      <p>The questions owners usually ask. Tap one to open it.</p>
+      <div class="qs">
+
+        <details class="q">
+          <summary>Do I need internet all the time?</summary>
+          <div class="q-a">
+            <p>No. The till keeps taking sales when the signal drops &mdash; they are held on the device and upload by themselves once you are back online. Nothing is lost and you do not have to do anything.</p>
+            <p>You do need a signal the first time you open it on a device, and it is worth opening it once a day with internet so everything catches up.</p>
+          </div>
+        </details>
+
+        <details class="q">
+          <summary>What device does it run on?</summary>
+          <div class="q-a">
+            <p>Any phone, tablet or laptop with a web browser. Chrome is the safest choice. You open a web address once, then save it to the home screen and it behaves like a normal app.</p>
+            <p>A cheap Android tablet propped on the counter is what most shops use. The device is yours to buy &mdash; it is not part of the system price.</p>
+          </div>
+        </details>
+
+        <details class="q">
+          <summary>Do I need a receipt printer?</summary>
+          <div class="q-a">
+            <p>No. Plenty of shops run without one and just tell the customer the total. If you want printed receipts, a small thermal printer with a 58&nbsp;mm roll is the usual choice, and you can add one later without changing anything in the till.</p>
+          </div>
+        </details>
+
+        <details class="q">
+          <summary>Can I add products or change prices myself later?</summary>
+          <div class="q-a">
+            <p>Yes, and you will. Everything you type here is only the starting list. With your admin code you can add a product, change a price, put something on sale or mark an item out of stock, any day, from the till itself. You are never waiting on Reymar for a price change.</p>
+          </div>
+        </details>
+
+        <details class="q">
+          <summary>What if my menu isn&rsquo;t ready yet?</summary>
+          <div class="q-a">
+            <p>Send the form without it. You will get a short sample list to replace at your own pace. Typing it here is faster, though &mdash; the prices go in once and the till is usable the moment you open it.</p>
+          </div>
+        </details>
+
+        <details class="q">
+          <summary>Who else can see my sales?</summary>
+          <div class="q-a">
+            <p>Only you and whoever you give the sign-in to. Your shop gets its own database, opened under your own email, holding only your shop&rsquo;s records.</p>
+            <p>Reymar looks at it when you ask for help and only for as long as that takes. Your sales, products, staff and customer records are yours, and you can export all of it to a spreadsheet whenever you like.</p>
+          </div>
+        </details>
+
+        <details class="q">
+          <summary>Can two cashiers use it at the same time?</summary>
+          <div class="q-a">
+            <p>Yes. Sign in on as many devices as you need and they all see the same products, stock and sales. Queue numbers are handed out by the server, so two counters can never give the same number to different customers.</p>
+          </div>
+        </details>
+
+        <details class="q">
+          <summary>Can it keep track of utang?</summary>
+          <div class="q-a">
+            <p>Yes. You can save a customer, ring up a sale as credit, and the amount sits on their record until they pay. You see who owes what and how long it has been outstanding without keeping a notebook.</p>
+          </div>
+        </details>
+
+        <details class="q">
+          <summary>Can I use this for official BIR receipts?</summary>
+          <div class="q-a">
+            <p>No. Arroyo POS prints an order receipt for your customer and keeps your own sales records. It is not a BIR-accredited system, so it does not stand in for official receipts or invoices you are required to issue.</p>
+            <p>If your shop is registered for those, carry on issuing them the way you do now. The till&rsquo;s reports make your own bookkeeping easier either way.</p>
+          </div>
+        </details>
+
+        <details class="q">
+          <summary>Is there a monthly fee?</summary>
+          <div class="q-a">
+            <p>Not for the software. You pay once for it and nothing more is owed for using it &mdash; no monthly charge, no yearly charge, no cut of your sales.</p>
+            <p>What you carry yourself is the ordinary running cost: your internet, and your own hardware.</p>
+          </div>
+        </details>
+
+        <details class="q">
+          <summary>What happens when the free service period ends?</summary>
+          <div class="q-a">
+            <p>The till keeps working exactly as before and all your data stays with you. What stops is service &mdash; fixing faults, updates and support &mdash; until you arrange to continue it.</p>
+            <p>You will be told the price in writing before the free period runs out, and continuing is your choice, not automatic.</p>
+          </div>
+        </details>
+
+        <details class="q">
+          <summary>I answered something wrong. Can I change it?</summary>
+          <div class="q-a">
+            <p>Yes. Nothing is locked in until your till is built. Fill the form in again and send it, or just message Reymar with the correction.</p>
+          </div>
+        </details>
+
+        <details class="q">
+          <summary>Is anything charged through this form?</summary>
+          <div class="q-a">
+            <p>No. The form asks for no card details and takes no payment. It only collects what your till needs to be set up.</p>
+          </div>
+        </details>
+
+      </div>
+    </section>
+
+    <button type="submit" class="send" id="sendBtn">Send to Reymar</button>
+    <div class="alts">
+      <button type="button" id="copyBtn">Copy as text</button>
+      <a id="mailBtn" href="#">Open my email app</a>
+    </div>
+    <div class="msg" id="msg" role="status" aria-live="polite"></div>
+
+    <section class="sec" style="border-top:1px dashed var(--rule2);margin-top:8px">
+      <div class="sheet">
+        <h3>Reymar sets up the rest</h3>
+        <ul>
+          <li>The hosting and the web address your till runs at</li>
+          <li>The database your sales are saved to</li>
+          <li>Your admin code and till sign-in password, handed to you in person</li>
+          <li>Price, what is included, and the free service period &mdash; agreed separately, then written into an agreement you sign</li>
+        </ul>
+      </div>
+    </section>
+
+    <p class="foot">Sent straight to Reymar. Nothing here is a password, and no payment details are asked for.</p>
+
+  </form>
+</div>
+
+<script>
+/* Delivery. After the first submission FormSubmit emails you a one-time
+   activation link — click it and the form is live. Swap in the random
+   FormSubmit string once activated to keep the address out of public HTML.
+   Two routes on purpose: AJAX keeps the client on the page, and the plain
+   POST is immune to CORS and ad blockers when AJAX is blocked. */
+var AJAX_URL = 'https://formsubmit.co/ajax/areymar36@gmail.com';
+var POST_URL = 'https://formsubmit.co/areymar36@gmail.com';
+var MAIL_TO  = 'areymar36@gmail.com';
+
+var $ = function(id){ return document.getElementById(id); };
+var f = $('f'), msg = $('msg'), sendBtn = $('sendBtn');
+var bizType = $('bizType'), menuBox = $('starterProducts'), theme = $('themeColor');
+
+/* ── product parser: mirrors the deployer's parseStarter() exactly, so a
+      list that reads clean here pastes in clean there ─────────────────── */
+function priceOf(tok){
+  var t = String(tok == null ? '' : tok).trim().replace(/^(php|p|\u20b1)\s*/i,'').replace(/\s/g,'');
+  if(/^\d{1,3}(,\d{3})+(\.\d{1,2})?$/.test(t)) t = t.split(',').join('');
+  if(!/^\d+(\.\d{1,2})?$/.test(t)) return null;
+  var v = parseFloat(t);
+  return isFinite(v) ? v : null;
+}
+function parseMenu(){
+  var raw = menuBox.value || '', items = [], errors = [], seen = {};
+  raw.split(/\r?\n/).forEach(function(line, ix){
+    var t = line.trim();
+    if(!t || t.charAt(0) === '#') return;
+    var parts = (t.indexOf('|') > -1 ? t.split('|') : t.split(',')).map(function(x){ return x.trim(); });
+    var name = parts[0] || '';
+    if(!name){ errors.push('line ' + (ix + 1) + ' has no product name'); return; }
+    var price = priceOf(parts[1]);
+    if(price === null){
+      errors.push('line ' + (ix + 1) + ', ' + name + ': "' + String(parts[1] == null ? '' : parts[1]).trim() +
+        '" is not a price' + (t.indexOf('|') > -1 ? '' : '. If the name has a comma, split that line with | instead'));
+      return;
+    }
+    var key = name.toLowerCase();
+    if(seen[key]){ errors.push('line ' + (ix + 1) + ': ' + name + ' is listed twice'); return; }
+    seen[key] = 1;
+    items.push({ name: name.slice(0,60), price: Math.round(price * 100) / 100, cat: (parts[2] || 'General').slice(0,24) });
+  });
+  return { items: items, errors: errors };
+}
+function syncMenu(){
+  var st = $('menuStatus');
+  if(!menuBox.value.trim()){
+    st.className = '';
+    st.textContent = 'Nothing yet \u2014 a sample list will be used.';
+    drawReceipt();
+    return;
+  }
+  var r = parseMenu();
+  if(r.errors.length){
+    st.className = 'err';
+    st.textContent = r.errors.length + (r.errors.length === 1 ? ' line to fix: ' : ' lines to fix. First: ') + r.errors[0];
+  } else {
+    var cats = [];
+    r.items.forEach(function(i){ if(cats.indexOf(i.cat) < 0) cats.push(i.cat); });
+    st.className = 'ok';
+    st.textContent = r.items.length + (r.items.length === 1 ? ' product' : ' products') + ' in ' +
+      cats.length + (cats.length === 1 ? ' category' : ' categories') + '. Ready.';
+  }
+  drawReceipt();
+}
+
+/* same starter samples the deployer ships, so the two agree */
+var SAMPLES = {
+  cafe:'Espresso, 90, Coffee, 99\nLatte, 120, Coffee, 99\nCroissant, 80, Pastry, 20\nCheesecake, 110, Pastry, 15',
+  restaurant:'Burger, 150, Mains, 40\nFries, 65, Sides, 60\nIced tea, 55, Drinks, 80\nRice meal, 120, Mains, 35',
+  bakery:'Pandesal, 5, Bread, 300\nEnsaymada, 35, Bread, 60\nSpanish bread, 15, Bread, 80\nUbe cake slice, 85, Cake, 20\nBrewed coffee, 45, Drinks',
+  'sari-sari':'Instant noodles, 15, Grocery, 100\nSoft drink, 25, Drinks, 60\nShampoo sachet, 8, Personal care, 150\nCanned sardines, 28, Grocery, 80\nLoad 50, 55, Services',
+  apparel:'T-shirt, 350, Tops, 25\nJeans, 800, Bottoms, 12\nCap, 250, Accessories, 30\nBag, 550, Accessories, 8',
+  salon:'Haircut, 150, Services\nHair color, 800, Services\nManicure, 120, Services\nFacial, 450, Services',
+  pharmacy:'Paracetamol, 5, Medicine, 200\nVitamins, 12, Medicine, 150\nBandage, 35, Supplies, 40',
+  grocery:'Rice 5kg, 320, Staples, 30\nEggs 12pcs, 110, Staples, 25\nMilk 1L, 95, Dairy, 20\nBread, 65, Bakery, 18',
+  custom:'Item 1, 100, General, 50\nItem 2, 200, General, 50'
+};
+$('sampleBtn').addEventListener('click', function(){
+  var s = SAMPLES[bizType.value] || SAMPLES.custom;
+  if(menuBox.value.trim() && !confirm('Replace what is already typed with a sample you can edit?')) return;
+  menuBox.value = s;
+  menuBox.focus();
+  syncMenu();
+});
+
+/* ── colour presets: same eight the POS admin offers ─────────────────── */
+(function(){
+  var PRESETS = [['#111110','Charcoal'],['#1a2a1a','Forest'],['#1a1a2e','Night'],['#2c1a1a','Wine'],
+                 ['#1a2a3a','Navy'],['#2a1f0e','Mocha'],['#f5f0e8','Cream'],['#f0f4f0','Mint']];
+  var wrap = $('swatches');
+  PRESETS.forEach(function(p){
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'sw'; b.title = p[1];
+    b.setAttribute('aria-label', p[1]);
+    b.setAttribute('aria-pressed', 'false');
+    b.style.background = p[0];
+    b.addEventListener('click', function(){ theme.value = p[0]; markSwatch(); drawReceipt(); });
+    wrap.appendChild(b);
+  });
+  window.markSwatch = function(){
+    wrap.querySelectorAll('.sw').forEach(function(b){
+      var hex = b.style.background;
+      b.setAttribute('aria-pressed', String(toHex(hex) === theme.value.toLowerCase()));
+    });
+  };
+  function toHex(v){
+    var m = v.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+    if(!m) return String(v).toLowerCase();
+    return '#' + [1,2,3].map(function(i){ return ('0' + (+m[i]).toString(16)).slice(-2); }).join('');
+  }
+  markSwatch();
+})();
+
+/* ── receipt preview ────────────────────────────────────────────────── */
+function readableOn(hex){
+  var h = hex.replace('#',''),
+      r = parseInt(h.substr(0,2),16) / 255,
+      g = parseInt(h.substr(2,2),16) / 255,
+      b = parseInt(h.substr(4,2),16) / 255;
+  var lin = [r,g,b].map(function(c){ return c <= .03928 ? c / 12.92 : Math.pow((c + .055) / 1.055, 2.4); });
+  var L = .2126 * lin[0] + .7152 * lin[1] + .0722 * lin[2];
+  return L > .45 ? '#14201F' : '#FFFFFF';
+}
+function queueEligible(){ var t = bizType.value; return t === 'cafe' || t === 'restaurant' || t === 'bakery'; }
+function drawReceipt(){
+  var col = theme.value, bar = $('rollBar');
+  bar.style.background = col;
+  bar.style.color = readableOn(col);
+  bar.textContent = ($('bizName').value.trim() || 'Your POS') + ' \u2014 till';
+
+  $('rName').textContent = ($('bizName').value.trim() || 'Your shop name').toUpperCase();
+  $('rLoc').textContent = $('bizLoc').value.trim();
+
+  var r = parseMenu(), shown = r.items.slice(0,3), lines = $('rLines'), total = 0;
+  lines.innerHTML = '';
+  if(!shown.length){
+    lines.innerHTML = '<div class="rcpt-row"><span>Your first product</span><span>0.00</span></div>';
+  } else {
+    shown.forEach(function(i){
+      total += i.price;
+      var row = document.createElement('div');
+      row.className = 'rcpt-row';
+      row.innerHTML = '<span></span><span></span>';
+      row.children[0].textContent = i.name;
+      row.children[1].textContent = i.price.toFixed(2);
+      lines.appendChild(row);
+    });
+  }
+  $('rTot').textContent = total.toFixed(2);
+
+  var q = $('rQueue'), on = queueEligible() && $('queueOn').checked;
+  q.classList.toggle('hidden', !on);
+  if(on){
+    var p = $('queuePrefix').value.trim().toUpperCase().replace(/-+$/,'');
+    $('rQnum').textContent = (p ? p + '\u2011' : '') + '24';
+    /* a pale brand colour would vanish against the white receipt */
+    q.style.color = readableOn(col) === '#FFFFFF' ? col : '#14201F';
+  }
+}
+
+/* ── conditional sections ───────────────────────────────────────────── */
+function syncQueue(){
+  var ok = queueEligible();
+  $('queueFields').classList.toggle('hidden', !ok);
+  $('queueNA').classList.toggle('hidden', ok);
+  drawReceipt();
+}
+function syncPrint(){
+  $('printFields').classList.toggle('hidden', $('hasPrinter').value === 'No, no printed receipts');
+}
+
+['bizName','bizLoc','queuePrefix'].forEach(function(id){ $(id).addEventListener('input', drawReceipt); });
+$('queueOn').addEventListener('change', drawReceipt);
+theme.addEventListener('input', function(){ markSwatch(); drawReceipt(); });
+menuBox.addEventListener('input', syncMenu);
+bizType.addEventListener('change', function(){ syncQueue(); syncMenu(); });
+$('hasPrinter').addEventListener('change', syncPrint);
+syncQueue(); syncPrint(); syncMenu();
+
+/* ── collect + send ─────────────────────────────────────────────────── */
+function collect(){
+  var out = [];
+  document.querySelectorAll('section.sec[data-sec]').forEach(function(sec){
+    var rows = [];
+    sec.querySelectorAll('[data-label]').forEach(function(el){
+      if(el.closest('.hidden')) return;
+      var v;
+      if(el.type === 'checkbox') v = el.checked ? 'Yes' : 'No';
+      else if(el.tagName === 'SELECT') v = el.options[el.selectedIndex].text.replace(/\u2014/g,'-').trim();
+      else v = (el.value || '').trim();
+      rows.push({ label: el.dataset.label, value: v, dep: el.dataset.dep || '', el: el });
+    });
+    if(rows.length) out.push({ section: sec.dataset.sec, rows: rows });
+  });
+  return out;
+}
+function asText(){
+  var d = collect(), L = ['ARROYO POS - CLIENT INTAKE', ''];
+  d.forEach(function(s){
+    L.push('-- ' + s.section + ' --');
+    s.rows.forEach(function(r){
+      if(r.el === menuBox) return;
+      L.push(r.label + ': ' + (r.value || '-'));
+    });
+    L.push('');
+  });
+  var r = parseMenu();
+  L.push('-- PRODUCTS (paste into the deployer Starter products box) --');
+  L.push(menuBox.value.trim() || '(empty - sample list will be used)');
+  L.push('');
+  L.push(r.errors.length ? '!! ' + r.errors.length + ' line(s) need fixing: ' + r.errors.join(' | ')
+                         : r.items.length + ' product(s) parsed cleanly');
+  L.push('');
+  L.push('-- DEPLOYER FIELDS --');
+  L.push('bizType: ' + bizType.value);
+  d.forEach(function(s){
+    s.rows.forEach(function(r2){
+      if(!r2.dep || r2.dep === 'bizType' || r2.dep === 'starterProducts') return;
+      L.push(r2.dep + ': ' + (r2.value || '-'));
+    });
+  });
+  return L.join('\n');
+}
+function payload(){
+  var body = {};
+  collect().forEach(function(s){
+    s.rows.forEach(function(r){
+      if(r.el === menuBox) return;
+      body[s.section + ' - ' + r.label] = r.value || '-';
+    });
+  });
+  var p = parseMenu();
+  body['Products - list'] = menuBox.value.trim() || '(empty)';
+  body['Products - check'] = p.errors.length ? p.errors.length + ' line(s) to fix: ' + p.errors.join(' | ')
+                                             : p.items.length + ' parsed cleanly';
+  body['Deployer - bizType value'] = bizType.value;
+  body._subject = 'POS intake: ' + ($('bizName').value.trim() || 'new client');
+  body._template = 'table';
+  body._captcha = 'false';
+  body._honey = $('_honey').value;
+  return body;
+}
+function show(kind, html){ msg.className = 'msg show ' + kind; msg.innerHTML = html; }
+
+f.addEventListener('submit', function(e){
+  e.preventDefault();
+  var bad = [];
+  f.querySelectorAll('[required]').forEach(function(el){ if(!el.checkValidity()) bad.push(el); });
+  if(bad.length){
+    bad[0].focus();
+    bad[0].scrollIntoView({ block:'center', behavior:'smooth' });
+    show('err', '<b>Two answers are still needed.</b> Fill in the shop name and the owner&rsquo;s email, then send again.');
+    return;
+  }
+  var pm = parseMenu();
+  if(pm.errors.length && !confirm(pm.errors.length + ' product line(s) will not read properly:\n\n' +
+      pm.errors.slice(0,3).join('\n') + '\n\nSend anyway?')) return;
+
+  sendBtn.disabled = true;
+  show('busy', 'Sending\u2026');
+
+  /* Form-encoded rather than JSON: it is a CORS-safelisted content type, so the
+     browser skips the OPTIONS preflight that JSON requires. One less thing to
+     block, and one less thing to go wrong on a weak connection. */
+  var body = payload(), enc = new URLSearchParams();
+  Object.keys(body).forEach(function(k){ enc.append(k, body[k]); });
+
+  fetch(AJAX_URL, { method:'POST', headers:{ 'Accept':'application/json' }, body: enc })
+    .then(function(r){
+      return r.json().catch(function(){ return {}; }).then(function(j){ return { ok:r.ok, j:j }; });
+    }).then(function(res){
+      if(res.ok && String(res.j.success) !== 'false'){
+        show('ok', '<b>Sent.</b> Reymar has your details. If you have a logo, email it to ' + MAIL_TO + ' now as an attachment.');
+        sendBtn.textContent = 'Sent';
+      } else {
+        throw new Error(res.j.message || 'the delivery service refused it');
+      }
+    }).catch(function(err){
+      sendBtn.disabled = false;
+      var m = String(err && err.message || err);
+      var blocked = /failed to fetch|load failed|networkerror|fetch/i.test(m);
+      if(blocked){
+        show('err', '<b>Your browser blocked the send.</b> Usually an ad blocker, a private-mode shield, or a lost signal. ' +
+          'Nothing you typed is lost \u2014 tap the button below to send it the direct way instead.' +
+          '<div style="margin-top:11px"><button type="button" class="ghost" id="directBtn">Send the direct way</button></div>');
+        $('directBtn').addEventListener('click', postDirect);
+      } else {
+        show('err', '<b>It did not send \u2014 ' + m + '.</b> Tap <b>Copy as text</b> below, then paste it into an email to ' +
+          MAIL_TO + '. Nothing you typed is lost.');
+      }
+    });
+});
+
+/* A real form POST. No fetch, no CORS, no preflight — so this still works when
+   the browser or an extension refuses the background request. It leaves the
+   page for FormSubmit's confirmation screen, which is why it is the fallback
+   rather than the default. */
+function postDirect(){
+  var body = payload(), fm = document.createElement('form');
+  fm.method = 'POST';
+  fm.action = POST_URL;
+  fm.style.display = 'none';
+  Object.keys(body).forEach(function(k){
+    var i = document.createElement('input');
+    i.type = 'hidden'; i.name = k; i.value = body[k];
+    fm.appendChild(i);
+  });
+  document.body.appendChild(fm);
+  fm.submit();
+}
+
+/* Opened straight from a folder, the browser refuses the cross-site send. Say so
+   before the client wastes a tap on it. */
+if(location.protocol === 'file:'){
+  show('err', '<b>This page is open from a folder, not from the web.</b> Sending will not work here. ' +
+    'Open the real link Reymar gave you, or use <b>Copy as text</b> below and paste it into an email to ' + MAIL_TO + '.');
+}
+
+$('copyBtn').addEventListener('click', function(){
+  var t = asText(), btn = this;
+  function done(){ btn.textContent = 'Copied'; setTimeout(function(){ btn.textContent = 'Copy as text'; }, 1800); }
+  function fallback(){
+    var ta = document.createElement('textarea');
+    ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); done(); }
+    catch(e){ show('err', '<b>This browser blocks copying.</b> Use <b>Open my email app</b> instead.'); }
+    document.body.removeChild(ta);
+  }
+  if(navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(t).then(done, fallback);
+  else fallback();
+});
+
+$('mailBtn').addEventListener('click', function(){
+  var subj = 'POS intake: ' + ($('bizName').value.trim() || 'new client');
+  this.href = 'mailto:' + MAIL_TO + '?subject=' + encodeURIComponent(subj) + '&body=' + encodeURIComponent(asText());
+});
+</script>
+</body>
+</html>

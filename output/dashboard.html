@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyStore POS - Owner Dashboard</title>
+<style>
+:root{
+  --bg:#f4f6f8; --card:#fff; --text:#1f2937; --muted:#6b7280;
+  --primary:#2563eb; --primary-weak:#dbeafe; --danger:#dc2626;
+  --success:#16a34a; --warn:#f59e0b; --border:#e5e7eb; --shadow:0 1px 3px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text)}
+a{color:var(--primary);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* Layout */
+.dashboard{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+@media(max-width:900px){.dashboard{grid-template-columns:1fr}}
+
+/* Sidebar */
+.sidebar{background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:auto;z-index:100}
+.sidebar-header{padding:16px;border-bottom:1px solid var(--border)}
+.sidebar-title{font-weight:700;font-size:1.1rem;color:var(--primary)}
+.sidebar-sub{font-size:.75rem;color:var(--muted);margin-top:2px}
+.sidebar-nav{padding:8px;flex:1}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;color:var(--text);font-size:.9rem;cursor:pointer;transition:.15s}
+.nav-item:hover{background:var(--primary-weak);color:var(--primary)}
+.nav-item.active{background:var(--primary-weak);color:var(--primary);font-weight:600}
+.nav-item .icon{width:20px;height:20px;flex-shrink:0}
+.nav-section{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:8px 12px;margin-top:8px}
+.sidebar-footer{padding:12px;border-top:1px solid var(--border)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:8px;font-size:.85rem;font-weight:600;cursor:pointer;border:none;transition:.15s}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:#1d4ed8}
+.btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--bg)}
+.btn-danger{background:#fee2e2;color:var(--danger);border:1px solid #fecaca}
+.btn-danger:hover{background:#fecaca}
+
+/* Topbar */
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar-left{display:flex;align-items:center;gap:16px}
+.menu-toggle{display:none;padding:8px;background:none;border:none;cursor:pointer}
+.breadcrumb{font-size:.85rem;color:var(--muted)}
+.breadcrumb strong{color:var(--text)}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.store-badge{font-size:.7rem;padding:4px 10px;background:var(--primary-weak);color:var(--primary);border-radius:999px;font-weight:600}
+.user-menu{position:relative}
+.user-btn{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:none;border:1px solid var(--border);cursor:pointer;font-size:.85rem}
+.user-btn:hover{background:var(--bg)}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:var(--primary-weak);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem}
+.user-dropdown{position:absolute;right:0;top:calc(100%+8px);background:var(--card);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);min-width:180px;display:none;z-index:200;padding:4px}
+.user-menu:hover .user-dropdown,.user-menu:focus-within .user-dropdown{display:block}
+.dropdown-item{display:block;padding:10px 12px;font-size:.85rem;color:var(--text);border-radius:6px;background:none;border:none;width:100%;text-align:left;cursor:pointer}
+.dropdown-item:hover{background:var(--bg)}
+.dropdown-item.danger{color:var(--danger)}
+
+/* Main Content */
+.main{padding:24px;overflow:auto}
+.page{display:none}
+.page.active{display:block;animation:fade .15s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* Page Header */
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.page-title{font-size:1.4rem;font-weight:700}
+.page-actions{display:flex;gap:8px}
+
+/* Stats Grid */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px}
+.stat-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px}
+.stat-value{font-size:1.75rem;font-weight:700;color:var(--text)}
+.stat-delta{font-size:.75rem;margin-top:4px;display:flex;align-items:center;gap:4px}
+.stat-delta.positive{color:var(--success)}
+.stat-delta.negative{color:var(--danger)}
+
+/* Tables */
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+table{width:100%;border-collapse:collapse}
+th,td{padding:12px 16px;text-align:left;font-size:.85rem;border-bottom:1px solid var(--border)}
+th{background:#fafafa;font-weight:600;color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafafa}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:.65rem;font-weight:600}
+.badge-success{background:#dcfce7;color:#166534}
+.badge-warn{background:#fef3c7;color:#92400e}
+.badge-danger{background:#fee2e2;color:#991b1b}
+.badge-info{background:#dbeafe;color:#1e40af}
+.badge-neutral{background:#f3f4f6;color:#374151}
+
+/* Forms */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group label{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+.form-group input,.form-group select,.form-group textarea{padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:.9rem;background:var(--card);color:var(--text);transition:border .15s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-weak)}
+.form-row{display:flex;gap:12px;flex-wrap:wrap}
+.form-row .form-group{flex:1;min-width:180px}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-weight:600;font-size:.95rem}
+
+/* Approval Cards */
+.approval-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.approval-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.approval-header{display:flex;justify-content:space-between;align-items:flex-start}
+.approval-meta{font-size:.75rem;color:var(--muted)}
+.approval-items{max-height:200px;overflow:auto;padding-right:4px}
+.approval-item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:.8rem}
+.approval-item:last-child{border-bottom:none}
+.approval-actions{display:flex;gap:8px;margin-top:8px}
+
+/* Empty States */
+.empty-state{text-align:center;padding:48px 24px;color:var(--muted)}
+.empty-state .icon{font-size:3rem;margin-bottom:12px;opacity:.5}
+
+/* Modals */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;padding:24px;z-index:1000}
+.modal-overlay.active{display:flex}
+.modal{background:var(--card);border-radius:12px;width:100%;max-width:520px;max-height:90vh;overflow:auto;box-shadow:0 20px 50px rgba(0,0,0,.15)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+.modal-title{font-weight:600}
+.modal-close{background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--muted);padding:0 8px;line-height:1}
+.modal-body{padding:20px}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;padding:16px 20px;border-top:1px solid var(--border)}
+
+/* Toast */
+.toast-container{position:fixed;bottom:24px;right:24px;z-index:2000;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;box-shadow:var(--shadow);display:flex;align-items:center;gap:12px;min-width:280px;max-width:400px;animation:slideIn .3s ease}
+@keyframes slideIn{from{opacity:0;transform:translateX(100%)}to{opacity:1;transform:none}}
+.toast.success{border-left:4px solid var(--success)}
+.toast.error{border-left:4px solid var(--danger)}
+.toast.info{border-left:4px solid var(--primary)}
+
+/* Loading */
+.loading{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--muted)}
+.spinner{width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;margin-right:12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Responsive */
+@media(max-width:900px){
+  .menu-toggle{display:flex}
+  .sidebar{position:fixed;left:0;top:0;bottom:0;width:280px;transform:translateX(-100%);transition:transform .3s ease;z-index:200}
+  .sidebar.open{transform:translateX(0)}
+  .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:150}
+  .sidebar-overlay.active{display:block}
+  .topbar{padding:0 16px}
+}
+</style>
+</head>
+<body>
+<div class="dashboard">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">MyStore POS</div>
+      <div class="sidebar-sub">Owner Dashboard</div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav">
+      <div class="nav-section">Dashboard</div>
+      <button class="nav-item active" data-page="overview">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Overview</span>
+      </button>
+      <button class="nav-item" data-page="transactions">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span>Transactions</span>
+      </button>
+      <button class="nav-item" data-page="approvals">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 0 1-4.255-.949L3 20l1.395-3.72C3.514 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        <span>Void/Return Approvals</span>
+      </button>
+
+      <div class="nav-section">Management</div>
+      <button class="nav-item" data-page="employees">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Employees</span>
+      </button>
+      <button class="nav-item" data-page="tills">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M4 10h16"/><path d="M8 14h8"/><path d="M12 18v4"/></svg>
+        <span>Till Management</span>
+      </button>
+      <button class="nav-item" data-page="settings">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <span>Settings</span>
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="btn btn-primary" style="width:100%" id="btnSyncNow">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6"/><path d="M1 20v-6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        Sync Now
+      </button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Main Content -->
+  <main class="main">
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <nav class="breadcrumb" id="breadcrumb">
+          <strong>MyStore POS</strong> / <span id="pageTitle">Overview</span>
+        </nav>
+      </div>
+      <div class="topbar-right">
+        <span class="store-badge" id="storeBadge">Loading...</span>
+        <div class="user-menu">
+          <button class="user-btn" id="userBtn">
+            <div class="user-avatar" id="userAvatar">O</div>
+            <span id="userName">Owner</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="user-dropdown" id="userDropdown">
+            <button class="dropdown-item" data-action="profile">Profile</button>
+            <button class="dropdown-item" data-action="changePassword">Change Password</button>
+            <hr style="margin:4px 0;border:none;border-top:1px solid var(--border)">
+            <button class="dropdown-item danger" data-action="logout">Logout</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Pages -->
+    <section class="page active" id="page-overview">
+      <header class="page-header">
+        <h1 class="page-title">Overview</h1>
+        <div class="page-actions">
+          <button class="btn btn-primary" id="btnRefreshOverview">Refresh</button>
+        </div>
+      </header>
+      <div class="stats-grid" id="overviewStats">
+        <!-- Stats cards injected here -->
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Recent Activity</h2>
+        </div>
+        <div class="table-wrap">
+          <table id="recentActivityTable">
+            <thead><tr><th>Time</th><th>Till</th><th>Type</th><th>Amount</th><th>Cashier</th><th>Status</th></tr></thead>
+            <tbody id="recentActivityBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="page-transactions">
+      <header class="page-header">
+        <h1 class="page-title">Transactions</h1>
+        <div class="page-actions">
+          <button class="btn btn-ghost" id="btnExportTransactions">Export CSV</button>
+          <button class="btn btn-primary" id="btnRefreshTransactions">Refresh</button>
+        </div>
+      </header>
+      <div class="form-row" style="margin-bottom:16px">
+        <div class="form-group" style="flex:1;min-width:200px">
+          <label>Date Range</label>
+          <input type="date" id="txnDateFrom">
+        </div>
+        <div class="form-group" style="flex:1;min-width:200px">
+          <label>&nbsp;</label>
+          <input type="date" id="txnDateTo">
+        </div>
+        <div class="form-group" style="min-width:180px">
+          <label>Till</label>
+          <select id="txnTillFilter"><option value="">All Tills</option></select>
+        </div>
+        <div class="form-group" style="min-width:180px">
+          <label>Type</label>
+          <select id="txnTypeFilter"><option value="">All Types</option><option value="sale">Sale</option><option value="void">Void</option><option value="return">Return</option><option value="payment">Payment</option></select>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="transactionsTable">
+          <thead><tr><th>Date/Time</th><th>Till</th><th>Type</th><th>Items</th><th>Subtotal</th><th>Discount</th><th>Tax</th><th>Total</th><th>Payment</th><th>Cashier</th></tr></thead>
+          <tbody id="transactionsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="page" id="page-approvals">
+      <header class="page-header">
+        <h1 class="page-title">Void/Return Approvals</h1>
+        <div class="page-actions">
+          <button class="btn btn-primary" id="btnRefreshApprovals">Refresh</button>
+        </div>
+      </header>
+      <div class="approval-grid" id="approvalsGrid">
+        <!-- Approval cards injected here -->
+      </div>
+    </section>
+
+    <section class="page" id="page-employees">
+      <header class="page-header">
+        <h1 class="page-title">Employee Management</h1>
+        <div class="page-actions">
+          <button class="btn btn-primary" id="btnAddEmployee">Add Employee</button>
+          <button class="btn btn-ghost" id="btnRefreshEmployees">Refresh</button>
+        </div>
+      </header>
+      <div class="table-wrap">
+        <table id="employeesTable">
+          <thead><tr><th>Name</th><th>Role</th><th>PIN Set</th><th>Till Access</th><th>Last Active</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="employeesBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="page" id="page-tills">
+      <header class="page-header">
+        <h1 class="page-title">Till / Device Management</h1>
+        <div class="page-actions">
+          <button class="btn btn-primary" id="btnAddTill">Add Till</button>
+          <button class="btn btn-ghost" id="btnRefreshTills">Refresh</button>
+        </div>
+      </header>
+      <div class="approval-grid" id="tillsGrid">
+        <!-- Till cards injected here -->
+      </div>
+    </section>
+
+    <section class="page" id="page-settings">
+      <header class="page-header">
+        <h1 class="page-title">Settings</h1>
+      </header>
+      <div class="card" style="max-width:600px">
+        <h3 style="margin-bottom:16px">Store Information</h3>
+        <div class="form-grid" id="storeSettingsForm">
+          <div class="form-group"><label>Store Name</label><input type="text" id="setStoreName"></div>
+          <div class="form-group"><label>Store ID</label><input type="text" id="setStoreId" readonly></div>
+          <div class="form-group"><label>Owner Email</label><input type="email" id="setOwnerEmail"></div>
+          <div class="form-group"><label>Sync Server URL</label><input type="text" id="setSyncUrl" placeholder="https://your-server.com"></div>
+          <div class="form-group"><label>Sync Token</label><input type="text" id="setSyncToken" readonly></div>
+        </div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;gap:8px">
+          <button class="btn btn-primary" id="btnSaveSettings">Save Settings</button>
+          <button class="btn btn-danger" id="btnResetOwnerPass">Reset Owner Password</button>
+        </div>
+      </div>
+      <div class="card" style="max-width:600px;margin-top:16px">
+        <h3 style="margin-bottom:16px">Tax & Discount Settings</h3>
+        <div class="form-grid" id="taxSettingsForm">
+          <div class="form-group"><label>VAT Rate (%)</label><input type="number" step="0.01" id="setVatRate"></div>
+          <div class="form-group"><label>Senior/PWD Discount (%)</label><input type="number" step="0.01" id="setSeniorDiscount"></div>
+          <div class="form-group"><label>Currency</label><select id="setCurrency"><option value="PHP">PHP (₱)</option><option value="USD">USD (\$)</option></select></div>
+        </div>
+        <button class="btn btn-primary" style="margin-top:16px" id="btnSaveTaxSettings">Save Tax Settings</button>
+      </div>
+      <div class="card" style="max-width:600px;margin-top:16px">
+        <h3 style="margin-bottom:16px">Danger Zone</h3>
+        <p style="color:var(--muted);font-size:.85rem;margin-bottom:16px">These actions are irreversible.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-danger" id="btnClearTillData">Clear All Till Data</button>
+          <button class="btn btn-danger" id="btnClearHistory">Clear Transaction History</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Modals -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="modalTitle">Modal</h3>
+      <button class="modal-close" id="modalClose">&times;</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Page Scripts will be injected here (Chunk 2) -->
+<script>
+// ============================================
+// MyStore POS - Owner Dashboard JavaScript
+// ============================================
+
+/* global fetch, EventSource, localStorage, sessionStorage */
+
+(function() {
+  'use strict';
+
+  // ============================================
+  // CONFIG & STATE
+  // ============================================
+  const CONFIG = {
+    apiBase: '/api',
+    syncBase: '/sync',
+    sseEndpoint: '/api/events',
+    storeId: null,
+    token: null,
+    syncToken: null
+  };
+
+  const state = {
+    currentPage: 'overview',
+    stats: {},
+    transactions: [],
+    employees: [],
+    tills: [],
+    approvals: {},
+    sse: null,
+    modalResolve: null,
+    toastId: 0
+  };
+
+  // ============================================
+  // UTILITY FUNCTIONS
+  // ============================================
+  function \$(sel, ctx = document) { return ctx.querySelector(sel); }
+  function \$\$(sel, ctx = document) { return Array.from(ctx.querySelectorAll(sel)); }
+
+  function formatCurrency(val, currency = 'PHP') {
+    const num = Number(val) || 0;
+    if (currency === 'PHP') return '₱' + num.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    return '\
+function resetB() {
+  document.getElementById('succ').style.display = 'none';
+  document.getElementById('prog').style.display = 'none';
+  window.scrollTo({top:0,behavior:'smooth'});
+  markStep(1);
+}
+
+function clearDraft() {
+  if (!confirm('Clear saved draft?')) return;
+  localStorage.removeItem(SAVE_KEY);
+  location.reload();
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.style.opacity = '1';
+  t.style.transform = 'translateY(0)';
+  setTimeout(function(){
+    t.style.opacity = '0';
+    t.style.transform = 'translateY(10px)';
+  }, 3000);
+}
+
+function val(id)     { var el=document.getElementById(id); return el?el.value:''; }
+function setVal(id,v){ var el=document.getElementById(id); if(el)el.value=v; }
+
+// ── GitHub App Package Generator ──────────────────────────────────
+function generateGitHubApp() {
+  var cfg = collectForm();
+  cfg.logo = logoData;
+
+  var posHtml = document.getElementById('btn-dl') && document.getElementById('btn-dl')._posHtml;
+  if (!posHtml) {
+    alert('Please click "Generate MyStore POS Now" first, then try again.');
+    return;
+  }
+
+  var ghUser  = (cfg.ghUser  || '').trim() || 'yourusername';
+  var ghRepo  = (cfg.ghRepo  || '').trim().toLowerCase().replace(/[^a-z0-9-]/g,'-') || 'mystore-pos';
+  var ghShort = (cfg.ghShort || '').trim() || (cfg.name || 'MyStore').slice(0,14);
+  var appName = cfg.name || 'My Store';
+  var appURL  = 'https://' + ghUser + '.github.io/' + ghRepo + '/';
+  var accent  = cfg.themeColor || '#1a3a5c';
+  var swVersion = 'v' + (window.__lastBuildStamp || Date.now().toString());
+
+  // Build icon PNG using canvas (emoji or logo)
+  function buildIconPng(size, callback) {
+    var canvas = document.createElement('canvas');
+    canvas.width = size; canvas.height = size;
+    var ctx = canvas.getContext('2d');
+    // Rounded rect background
+    ctx.fillStyle = accent;
+    ctx.beginPath();
+    var r = size * 0.2;
+    ctx.moveTo(r,0); ctx.lineTo(size-r,0);
+    ctx.quadraticCurveTo(size,0,size,r);
+    ctx.lineTo(size,size-r);
+    ctx.quadraticCurveTo(size,size,size-r,size);
+    ctx.lineTo(r,size);
+    ctx.quadraticCurveTo(0,size,0,size-r);
+    ctx.lineTo(0,r);
+    ctx.quadraticCurveTo(0,0,r,0);
+    ctx.closePath();
+    ctx.fill();
+
+    if (cfg.logo) {
+      var img = new Image();
+      img.onload = function() {
+        var pad = size * 0.12;
+        ctx.drawImage(img, pad, pad, size-pad*2, size-pad*2);
+        callback(canvas.toDataURL('image/png').split(',')[1]);
+      };
+      img.src = cfg.logo;
+    } else {
+      var em = cfg.emoji || '🏪';
+      var fs = Math.round(size * 0.52);
+      ctx.font = fs + 'px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(em, size/2, size/2 + fs*0.05);
+      callback(canvas.toDataURL('image/png').split(',')[1]);
+    }
+  }
+
+  // PWA manifest
+  var manifest = {
+    name:             appName + ' POS',
+    short_name:       ghShort,
+    description:      appName + ' — Point of Sale System',
+    start_url:        './',
+    scope:            './',
+    display:          'fullscreen',
+    orientation:      'any',
+    background_color: '#0f1e2d',
+    theme_color:      accent,
+    icons: [
+      { src:'icon-192.png', sizes:'192x192', type:'image/png', purpose:'any maskable' },
+      { src:'icon-512.png', sizes:'512x512', type:'image/png', purpose:'any maskable' }
+    ]
+  };
+
+  // Service worker
+  var swJs = [
+    // FIX #1 — the cache name used to be pinned to "-v1" while the fetch
+    // handler is cache-first, so an installed POS served the very first
+    // build forever and no redeploy could ever reach it. Tying the cache
+    // to the build stamp makes each new build a new cache, and the
+    // activate handler already deletes every cache that is not current.
+    "const CACHE = '" + ghRepo + "-" + swVersion + "';",
+    "const FILES = ['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png'];",
+    "self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)));self.skipWaiting();});",
+    "self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim();});",
+    "self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match('./index.html'))));});"
+  ].join('\n');
+
+  // README
+  var today = new Date().toLocaleDateString('en-PH',{year:'numeric',month:'long',day:'numeric'});
+  var readme = [
+    '# ' + appName + ' POS',
+    '',
+    '> Point of Sale system built with **Arroyo POS Engine** (MyStore POS)',
+    '',
+    '## 🌐 Live App',
+    '',
+    '**' + appURL + '**',
+    '',
+    '## 📱 Install as App',
+    '',
+    '1. Open **' + appURL + '** in Chrome (Android) or Safari (iPhone)',
+    '2. Tap **⋮ menu** → **Add to Home Screen**',
+    '3. Tap **Add** — your POS opens full screen like a native app',
+    '',
+    '## 🔑 Sign in',
+    '',
+    'Staff accounts were configured when this build was generated. PINs are',
+    'stored hashed and are **not** listed here on purpose — this repository is',
+    'public, and anything written in it can be read by anyone.',
+    '',
+    '> On first launch the app will prompt the manager to set fresh PINs.',
+    '> Do that before taking any real money.',
+    '',
+    '## 📁 Files',
+    '',
+    '| File | Purpose |',
+    '|------|---------|',
+    '| `index.html` | The POS application |',
+    '| `manifest.json` | PWA manifest (fullscreen, icon, name) |',
+    '| `sw.js` | Service worker (offline + installable) |',
+    '| `icon-192.png` | App icon 192×192 |',
+    '| `icon-512.png` | App icon 512×512 |',
+    '',
+    '## ⚡ Built with',
+    '',
+    '[Arroyo POS Engine](https://github.com/reymar-arroyo) — MyStore POS Deployer',
+    '',
+    '---',
+    '*Generated ' + today + '*'
+  ].join('\n');
+
+  // Inject PWA tags into index.html
+  var indexHtml = posHtml.replace('<head>',
+    '<head>\n<link rel="manifest" href="./manifest.json">\n' +
+    '<meta name="mobile-web-app-capable" content="yes">\n' +
+    '<meta name="apple-mobile-web-app-capable" content="yes">\n' +
+    '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">\n' +
+    '<meta name="apple-mobile-web-app-title" content="' + ghShort + '">\n' +
+    '<link rel="apple-touch-icon" href="./icon-192.png">\n' +
+    '<meta name="theme-color" content="' + accent + '">');
+
+  // Inject service worker registration
+  indexHtml = indexHtml.replace('</body>',
+    '<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("./sw.js").catch(function(){});}\x3c/script>\n</body>');
+
+
+  /* ── Self-contained ZIP writer ──────────────────────────────────────────
+     Replaces the former JSZip CDN <script> load. The builder must work with
+     no network at all, so entries are written with the STORE method (no
+     compression). That is a fully valid ZIP; it is simply larger than a
+     DEFLATE archive. API surface matches the JSZip calls used below:
+     .file(name, data, {base64}) and .generateAsync() -> Promise<Blob>.
+  ─────────────────────────────────────────────────────────────────────── */
+  function zipStored() {
+    var entries = [];
+    var CRCT = (function () {
+      var t = new Uint32Array(256), c, n, k;
+      for (n = 0; n < 256; n++) {
+        c = n;
+        for (k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+        t[n] = c >>> 0;
+      }
+      return t;
+    })();
+    function crc32(buf) {
+      var c = 0xFFFFFFFF;
+      for (var i = 0; i < buf.length; i++) c = CRCT[(c ^ buf[i]) & 0xFF] ^ (c >>> 8);
+      return (c ^ 0xFFFFFFFF) >>> 0;
+    }
+    function utf8(str) {
+      if (typeof TextEncoder !== 'undefined') return new TextEncoder().encode(str);
+      var s = unescape(encodeURIComponent(str)), a = new Uint8Array(s.length), i;
+      for (i = 0; i < s.length; i++) a[i] = s.charCodeAt(i);
+      return a;
+    }
+    function fromB64(str) {
+      var s = atob(String(str).replace(/^data:[^,]*,/, '')), a = new Uint8Array(s.length), i;
+      for (i = 0; i < s.length; i++) a[i] = s.charCodeAt(i);
+      return a;
+    }
+    var d = new Date();
+    var DT = {
+      t: ((d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1)) & 0xFFFF,
+      d: (((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate()) & 0xFFFF
+    };
+    function w16(a, o, v) { a[o] = v & 0xFF; a[o + 1] = (v >>> 8) & 0xFF; }
+    function w32(a, o, v) {
+      a[o] = v & 0xFF; a[o + 1] = (v >>> 8) & 0xFF;
+      a[o + 2] = (v >>> 16) & 0xFF; a[o + 3] = (v >>> 24) & 0xFF;
+    }
+    return {
+      file: function (name, data, opts) {
+        var bytes = (opts && opts.base64) ? fromB64(data)
+                  : (data instanceof Uint8Array ? data : utf8(data));
+        entries.push({ name: utf8(name), bytes: bytes, crc: crc32(bytes) });
+      },
+      generateAsync: function () {
+        var parts = [], central = [], offset = 0, cdSize = 0, i, e, lh, ch;
+        for (i = 0; i < entries.length; i++) {
+          e = entries[i];
+          lh = new Uint8Array(30 + e.name.length);
+          w32(lh, 0, 0x04034b50); w16(lh, 4, 20); w16(lh, 6, 0x0800); w16(lh, 8, 0);
+          w16(lh, 10, DT.t); w16(lh, 12, DT.d); w32(lh, 14, e.crc);
+          w32(lh, 18, e.bytes.length); w32(lh, 22, e.bytes.length);
+          w16(lh, 26, e.name.length); w16(lh, 28, 0);
+          lh.set(e.name, 30);
+          parts.push(lh, e.bytes);
+          ch = new Uint8Array(46 + e.name.length);
+          w32(ch, 0, 0x02014b50); w16(ch, 4, 20); w16(ch, 6, 20);
+          w16(ch, 8, 0x0800); w16(ch, 10, 0);
+          w16(ch, 12, DT.t); w16(ch, 14, DT.d); w32(ch, 16, e.crc);
+          w32(ch, 20, e.bytes.length); w32(ch, 24, e.bytes.length);
+          w16(ch, 28, e.name.length); w16(ch, 30, 0); w16(ch, 32, 0);
+          w16(ch, 34, 0); w16(ch, 36, 0); w32(ch, 38, 0); w32(ch, 42, offset);
+          ch.set(e.name, 46);
+          central.push(ch);
+          offset += lh.length + e.bytes.length;
+        }
+        for (i = 0; i < central.length; i++) cdSize += central[i].length;
+        var eo = new Uint8Array(22);
+        w32(eo, 0, 0x06054b50); w16(eo, 4, 0); w16(eo, 6, 0);
+        w16(eo, 8, entries.length); w16(eo, 10, entries.length);
+        w32(eo, 12, cdSize); w32(eo, 16, offset); w16(eo, 20, 0);
+        return Promise.resolve(new Blob(parts.concat(central, [eo]), { type: 'application/zip' }));
+      }
+    };
+  }
+  
+  // Build ZIP (sw.js excluded — user uploads manually)
+  function buildZip(ic192, ic512) {
+    (function() {
+      var zip = zipStored();
+      // sw.js intentionally excluded — GitHub file upload blocks .js sometimes
+      // User creates it manually via GitHub "Create new file"
+      zip.file('index.html',    indexHtml);
+      zip.file('manifest.json', JSON.stringify(manifest, null, 2));
+      zip.file('README.md',     readme);
+      zip.file('icon-192.png',  ic192, {base64:true});
+      zip.file('icon-512.png',  ic512, {base64:true});
+
+      zip.generateAsync({type:'blob', compression:'DEFLATE', compressionOptions:{level:6}})
+        .then(function(blob) {
+          var a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = ghRepo + '-github-app.zip';
+          document.body.appendChild(a); a.click();
+          setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+
+          // Show sw.js box and deploy instructions
+          var swBox = document.getElementById('sw-content-box');
+          var swTa  = document.getElementById('sw-textarea');
+          if (swTa)  swTa.value = swJs;
+          if (swBox) swBox.style.display = 'block';
+
+          // Wire up sw.js download button
+          var swDlBtn = document.getElementById('btn-dl-sw');
+          if (swDlBtn) {
+            swDlBtn.onclick = function() {
+              var b = new Blob([swJs], {type:'text/plain;charset=utf-8'});
+              var aa = document.createElement('a');
+              aa.href = URL.createObjectURL(b);
+              aa.download = 'sw.js.txt';
+              document.body.appendChild(aa); aa.click();
+              setTimeout(function(){ URL.revokeObjectURL(aa.href); aa.remove(); }, 1000);
+            };
+          }
+
+          // Wire up copy button
+          var cpBtn = document.getElementById('btn-copy-sw');
+          if (cpBtn) {
+            cpBtn.onclick = function() {
+              if (swTa) { swTa.select(); swTa.setSelectionRange(0,99999); }
+              navigator.clipboard ? navigator.clipboard.writeText(swJs).then(function(){ showToast('✅ sw.js copied!'); }) : document.execCommand('copy') && showToast('✅ sw.js copied!');
+            };
+          }
+
+          // Show deploy instructions
+          var box = document.getElementById('gh-app-hint-box');
+          var rh  = document.getElementById('gh-repo-hint');
+          var uh  = document.getElementById('gh-url-hint');
+          if (rh) rh.textContent = ghRepo;
+          if (uh) uh.textContent = appURL;
+          if (box) { box.style.display = 'block'; box.scrollIntoView({behavior:'smooth',block:'start'}); }
+          showToast('📦 GitHub App ZIP downloaded!');
+        });
+    })();
+  }
+
+  showToast('⏳ Building ZIP package...');
+  buildIconPng(192, function(ic192) {
+    buildIconPng(512, function(ic512) {
+      buildZip(ic192, ic512);
+    });
+  });
+}
+
+// Auto-save on input
+document.addEventListener('input', function(){
+  var bar = document.getElementById('autosave-bar');
+  if (bar) bar.style.display = 'flex';
+  saveAutosave();
+});
+
+// ── Init ──────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', function() {
+  buildTypeGrid();
+
+  // Load default users
+  DEFAULT_USERS.forEach(function(u) { addUser(u.name, u.role, u.pin, u.color); });
+
+  // Restore autosave or load retail preset
+  var saved = loadAutosave();
+  if (saved) {
+    restoreForm(saved);
+  } else {
+    selectType('retail');
+  }
+
+  upPrev();
+});
+
+// ── Deployer CSV Import ──────────────────────────────────────────
+function dlDeployerTemplate(){
+  const csv = 'name,price,cost,stock,barcode,category,vat_exempt,expiry\n' +
+    'Bigas 1kg,55,48,100,,Grocery,YES,\n' +
+    'Coke 1.5L,78,65,50,4800888000000,Beverages,NO,\n' +
+    'Lucky Me Pancit Canton,12,9,200,,Instant noodles,NO,2027-03-31\n' +
+    'Head and Shoulders 10ml,18,14,150,,Personal care,NO,\n' +
+    'Biogesic 500mg,8,5,300,,Medicine,YES,2027-06-30\n' +
+    'Chippy 110g,25,20,80,,Snacks,NO,2026-11-15\n';
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'products_template.csv';
+  a.click();
+  showToast('📥 Template downloaded!');
+}
+
+function deployerCsvImport(e){
+  var file = e.target.files[0];
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev){
+    var lines = ev.target.result.trim().split(/\r?\n/);
+    var first = lines[0].toLowerCase();
+    var hasHeader = first.includes('name') || first.includes('price');
+    var dataLines = hasHeader ? lines.slice(1) : lines;
+    var parsed = dataLines.map(function(line){
+      var cols=[], cur='', inQ=false;
+      for(var i=0;i<line.length;i++){
+        var c=line[i];
+        if(c==='"'){ inQ=!inQ; }
+        else if(c===','&&!inQ){ cols.push(cur.trim()); cur=''; }
+        else cur+=c;
+      }
+      cols.push(cur.trim());
+      var g=function(i,def){ return (cols[i]||'').replace(/^"|"$/g,'').trim()||def||''; };
+      return { name:g(0), price:g(1,'0'), cost:g(2,'0'), stock:g(3,'0'), barcode:g(4,''), cat:g(5,'General'),
+               vx:/^(y|yes|1|true|vat-?ex(empt)?|x)$/i.test(g(6,'')),
+               exp:(/^\d{4}-\d{2}-\d{2}$/.test(g(7,'')) ? g(7,'') : '') };
+    }).filter(function(p){ return p.name; });
+
+    if(!parsed.length){ showToast('❌ No valid rows found'); return; }
+
+    // Ask replace or merge if rows already exist
+    var existing = document.getElementById('pt-body').rows.length;
+    if(existing > 0){
+      var choice = confirm('You have ' + existing + ' item(s) already.\n\nClick OK to REPLACE all with CSV items.\nClick Cancel to MERGE (add CSV items to existing).');
+      if(choice){
+        document.getElementById('pt-body').innerHTML = '';
+      }
+    }
+    parsed.forEach(function(p){
+      addRow(p.name, parseFloat(p.price)||0, parseFloat(p.cost)||0, parseInt(p.stock)||0, p.barcode, p.cat, p.vx, p.exp);
+    });
+    upSummary();
+    showToast('✅ ' + parsed.length + ' item(s) imported from CSV!');
+    saveAutosave();
+  };
+  reader.readAsText(file);
+}
+

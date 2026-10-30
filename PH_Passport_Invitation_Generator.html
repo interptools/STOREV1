@@ -1,0 +1,2407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>PH Passport Invitation — Site Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime&family=IM+Fell+English:ital@0;1&family=Cinzel:wght@400;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Lato',sans-serif;background:#f0ece4;min-height:100vh;color:#222}
+.app{display:grid;grid-template-columns:420px 1fr;min-height:100vh}
+.sidebar{background:#fff;border-right:1px solid #ddd;overflow-y:auto;display:flex;flex-direction:column}
+.sidebar-header{background:#3d1c1c;color:#fff;padding:18px 24px;flex-shrink:0}
+.sidebar-header h1{font-family:'Cinzel',serif;font-size:15px;margin-bottom:2px;letter-spacing:1px}
+.sidebar-header p{font-size:10px;opacity:.6;line-height:1.5}
+.steps{display:flex;border-bottom:1px solid #eee;flex-shrink:0}
+.step-tab{flex:1;padding:10px 3px;text-align:center;cursor:pointer;font-size:9px;font-weight:700;letter-spacing:.4px;color:#bbb;border-bottom:3px solid transparent;transition:all .2s;background:none;border-left:none;border-right:none;border-top:none;line-height:1.3}
+.step-tab.active{color:#7a1c2e;border-bottom-color:#7a1c2e}
+.step-tab .sn{display:block;font-family:'Cinzel',serif;font-size:13px;font-weight:700;margin-bottom:1px}
+.step-panel{display:none;flex:1;overflow-y:auto;padding:15px 20px}
+.step-panel.active{display:block}
+.sec-title{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999;margin-bottom:10px;margin-top:2px}
+.event-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:5px}
+.event-btn{padding:7px 5px;border:1.5px solid #ddd;border-radius:7px;background:#fff;cursor:pointer;text-align:center;font-size:10px;font-weight:700;color:#666;transition:all .2s;line-height:1.3}
+.event-btn:hover{border-color:#7a1c2e;color:#7a1c2e}
+.event-btn.active{background:#7a1c2e;color:#fff;border-color:#7a1c2e}
+.event-btn .ei{font-size:15px;display:block;margin-bottom:2px}
+.fg{margin-bottom:9px}
+.fg label{display:block;font-size:10px;font-weight:700;color:#555;margin-bottom:3px;letter-spacing:.3px}
+.fg input,.fg textarea{width:100%;padding:7px 9px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:'Lato',sans-serif;background:#fafafa;transition:border-color .2s}
+.fg input:focus,.fg textarea:focus{outline:none;border-color:#7a1c2e}
+.fg textarea{resize:vertical;min-height:52px}
+.fg .hint{font-size:10px;color:#aaa;margin-top:2px;line-height:1.4}
+.guest-row{display:flex;gap:5px;margin-bottom:6px;align-items:center}
+.guest-row input{flex:1;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:12px}
+.guest-row input:focus{outline:none;border-color:#7a1c2e}
+.btn-del{background:none;border:1px solid #ddd;border-radius:6px;color:#bbb;cursor:pointer;padding:5px 7px;font-size:12px;transition:all .2s;flex-shrink:0}
+.btn-del:hover{border-color:#e74c3c;color:#e74c3c}
+.btn-add{width:100%;padding:7px;border:1.5px dashed #ccc;border-radius:6px;background:none;color:#999;cursor:pointer;font-size:11px;transition:all .2s;margin-top:3px}
+.btn-add:hover{border-color:#7a1c2e;color:#7a1c2e}
+.btn-p{width:100%;padding:11px;background:#7a1c2e;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;transition:background .2s;margin-top:6px}
+.btn-p:hover{background:#5a1220}
+.btn-p:disabled{background:#ccc;cursor:not-allowed}
+.btn-s{width:100%;padding:10px;background:#fff;color:#7a1c2e;border:1.5px solid #7a1c2e;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;margin-top:6px}
+.btn-s:hover{background:#7a1c2e;color:#fff}
+.btn-g{width:100%;padding:8px;background:none;color:#888;border:1px solid #ddd;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;margin-top:5px}
+.btn-g:hover{border-color:#7a1c2e;color:#7a1c2e}
+.sep{height:1px;background:#eee;margin:11px 0}
+.info-box{background:#e8f4fd;border:1px solid #b8d4e8;border-radius:7px;padding:10px 12px;font-size:11px;color:#1a4a6a;line-height:1.6;margin-bottom:9px}
+.info-box strong{font-weight:700}
+.warn-box{background:#fff8e1;border:1px solid #ffe082;border-radius:7px;padding:10px 12px;font-size:11px;color:#5d4037;line-height:1.6;margin-bottom:9px}
+.status-msg{font-size:11px;padding:7px 10px;border-radius:6px;margin-top:6px;display:none}
+.status-msg.success{background:#e8f5e9;color:#2d6a4f;display:block}
+.status-msg.error{background:#fde8e8;color:#8b1a1a;display:block}
+.status-msg.sending{background:#fff8e1;color:#856404;display:block}
+.design-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:5px}
+.design-btn{border:2px solid #ddd;border-radius:7px;background:#fff;cursor:pointer;padding:0;overflow:hidden;transition:all .2s;display:flex;flex-direction:column}
+.design-btn:hover{border-color:#7a1c2e}
+.design-btn.active{border-color:#7a1c2e;box-shadow:0 0 0 2px rgba(122,28,46,0.2)}
+.design-preview{height:32px;display:block;width:100%}
+.design-label{font-size:9px;font-weight:700;color:#333;padding:3px 3px 1px;display:block;text-align:center}
+.design-sub{font-size:8px;color:#aaa;padding:0 3px 4px;display:block;text-align:center}
+.photo-upload-box{border:2px dashed #ddd;border-radius:7px;padding:14px;text-align:center;cursor:pointer;transition:border-color .2s;background:#fafafa}
+.photo-upload-box:hover{border-color:#7a1c2e;background:#fff8f8}
+.photo-upload-box img{width:100%;max-height:100px;object-fit:cover;border-radius:4px;display:block}
+.preview-panel{background:#d0c8bc;padding:16px 20px;display:flex;flex-direction:column;align-items:center;position:sticky;top:0;height:100vh;overflow-y:auto;box-sizing:border-box}
+.preview-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#888;margin-bottom:10px;text-align:center;flex-shrink:0}
+.passport-preview{width:280px;flex-shrink:0}
+.gen-section{background:#fff;border-radius:12px;padding:20px 22px;border:1px solid #ddd;margin-bottom:12px;width:100%;max-width:420px}
+.gen-title{font-family:'Cinzel',serif;font-size:13px;color:#3d1c1c;letter-spacing:1px;margin-bottom:14px}
+.gen-files{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.gen-file{display:flex;align-items:center;gap:10px;padding:9px 12px;background:#f8f4ee;border-radius:8px}
+.gen-file-icon{font-size:18px}
+.gen-file-name{font-weight:700;font-size:12px;color:#222}
+.gen-file-desc{font-size:11px;color:#888}
+.gen-btn{width:100%;padding:13px;background:#3d1c1c;color:#c8aa50;border:none;border-radius:8px;font-family:'Cinzel',serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:1px;transition:background .2s}
+.gen-btn:hover{background:#5a1220}
+.gen-btn:disabled{background:#ccc;color:#888;cursor:not-allowed}
+.guide-card{background:#f8f4ee;border-radius:9px;padding:12px 14px;margin-bottom:8px}
+.guide-card h4{font-family:'Cinzel',serif;font-size:11px;color:#3d1c1c;letter-spacing:1px;margin-bottom:8px}
+.guide-step{display:flex;align-items:flex-start;gap:9px;margin-bottom:7px;font-size:11px;color:#555;line-height:1.5}
+.guide-step:last-child{margin-bottom:0}
+.gn{background:#7a1c2e;color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;font-family:'Cinzel',serif;margin-top:1px}
+@keyframes ppSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.active{display:flex}
+.modal-box{background:#fff;border-radius:12px;padding:24px 28px;max-width:360px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.modal-box h3{font-family:'Cinzel',serif;font-size:14px;color:#3d1c1c;letter-spacing:1px;margin-bottom:10px}
+.modal-box p{font-size:12px;color:#555;line-height:1.6;margin-bottom:16px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end}
+.modal-confirm{padding:9px 20px;background:#3d1c1c;color:#c8aa50;border:none;border-radius:7px;font-family:'Cinzel',serif;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.5px}
+.modal-cancel{padding:9px 16px;background:#fff;color:#888;border:1px solid #ddd;border-radius:7px;font-size:12px;cursor:pointer}
+.val-error{background:#fde8e8;border:1px solid #f5c6c6;border-radius:7px;padding:9px 12px;font-size:11px;color:#8b1a1a;margin-bottom:8px;line-height:1.6;display:none}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+      <div>
+        <h1>PH Passport Invitation — Site Generator</h1>
+        <p>Fill in all details &rarr; generate client website &rarr; client uploads to GitHub Pages</p>
+      </div>
+      <button onclick="clearDraft()" title="Clear all form fields" style="flex-shrink:0;margin-top:2px;padding:5px 10px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);border-radius:5px;color:#fff;font-size:10px;cursor:pointer;letter-spacing:.5px;white-space:nowrap;font-family:inherit" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">&#10005; Clear</button>
+    </div>
+  </div>
+  <div class="steps">
+    <button class="step-tab active" onclick="goStep(1,this)" id="stab-1"><span class="sn">1</span>Event</button>
+    <button class="step-tab" onclick="goStep(2,this)" id="stab-2"><span class="sn">2</span>Design</button>
+    <button class="step-tab" onclick="goStep(3,this)" id="stab-3"><span class="sn">3</span>Details</button>
+    <button class="step-tab" onclick="goStep(4,this)" id="stab-4"><span class="sn">4</span>Email</button>
+    <button class="step-tab" onclick="goStep(5,this)" id="stab-5"><span class="sn">5</span>Generate</button>
+  </div>
+
+  <!-- Draft status bar -->
+  <div id="draft-bar" style="display:none;padding:4px 16px;background:#f0f8e8;border-bottom:1px solid #d4e8b0;font-size:10px;color:#5a7a2e;letter-spacing:.5px;align-items:center;gap:6px">
+    <span>&#10003; Draft auto-saved</span>
+    <span id="draft-time" style="opacity:.6"></span>
+  </div>
+
+  <!-- STEP 1: Event -->
+  <div class="step-panel active" id="panel-1">
+    <div class="sec-title">Choose event type</div>
+    <div class="event-grid" id="event-grid"></div>
+    <button class="btn-p" onclick="goStep(2,document.getElementById('stab-2'))">Next: Design &rarr;</button>
+  </div>
+
+  <!-- STEP 2: Design + Photo -->
+  <div class="step-panel" id="panel-2">
+    <div class="sec-title">Passport design theme</div>
+    <div class="design-grid" id="design-grid"></div>
+    <div class="sep"></div>
+    <div class="sec-title">Celebrant / event photo</div>
+    <div class="photo-upload-box" id="photo-upload-box" onclick="document.getElementById('photo-input').click()">
+      <div id="photo-area">
+        <span style="font-size:26px">&#128247;</span>
+        <span style="font-size:11px;color:#aaa;margin-top:3px;display:block">Click to upload photo</span>
+        <span style="font-size:10px;color:#ccc">Appears in passport photo box</span>
+      </div>
+      <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhoto(this)"/>
+    </div>
+    <button id="photo-clear" style="display:none;width:100%;padding:6px;background:none;border:1px solid #ddd;border-radius:6px;color:#aaa;cursor:pointer;font-size:11px;margin-top:4px" onclick="clearPhoto()">Remove photo</button>
+    <button class="btn-p" onclick="goStep(3,document.getElementById('stab-3'))" style="margin-top:10px">Next: Event Details &rarr;</button>
+    <button class="btn-g" onclick="goStep(1,document.getElementById('stab-1'))">&#8592; Back</button>
+  </div>
+
+  <!-- STEP 3: Event Details -->
+  <div class="step-panel" id="panel-3">
+    <div class="sec-title">Event details</div>
+    <div id="dynamic-fields"></div>
+    <div class="val-error" id="step3-error"></div>
+    <button class="btn-p" onclick="validateAndNextStep3()">Next: Email Setup &rarr;</button>
+    <button class="btn-g" onclick="goStep(2,document.getElementById('stab-2'))">&#8592; Back</button>
+  </div>
+
+  <!-- STEP 4: EmailJS -->
+  <div class="step-panel" id="panel-4">
+    <div class="sec-title">Host &amp; site info</div>
+    <div class="fg">
+      <label>Your name / Family name <span style="color:#7a1c2e;font-size:11px">(shown as sender)</span></label>
+      <input type="text" id="sender-name" placeholder="e.g. The Santos Family" oninput="refreshPreview()"/>
+    </div>
+    <div class="fg">
+      <label>Your email <span style="color:#7a1c2e;font-size:11px">(receives RSVP replies)</span></label>
+      <input type="email" id="host-email" placeholder="yourname@email.com" oninput="refreshPreview()"/>
+      <div class="hint">Guests will reply to this address when they RSVP</div>
+    </div>
+    <div class="fg">
+      <label>Your GitHub Pages site URL <span style="color:#7a1c2e;font-size:11px">(for auto-RSVP)</span></label>
+      <input type="url" id="site-url" placeholder="https://username.github.io/repo-name" oninput="refreshPreview()"/>
+      <div class="hint">When guests click Attend/Decline, they are taken to this URL and their RSVP is recorded automatically — no email needed</div>
+    </div>
+    <div class="fg">
+      <label>Host access password <span style="color:#7a1c2e;font-size:11px">(protects your management view)</span></label>
+      <input type="text" id="host-password" placeholder="e.g. Santos2026" oninput="autoSave()"/>
+      <div class="hint">Guests who visit your site directly must enter this password to see the management view. Leave blank to use default: <code style="background:#ede8d8;padding:1px 4px;border-radius:3px">host2025</code></div>
+    </div>
+    <div class="sep"></div>
+    <div class="sec-title">EmailJS setup</div>
+    <div class="info-box">These credentials will be <strong>embedded into the client website</strong> so it can send the full passport invitation automatically. The client does not configure anything.</div>
+
+    <div class="guide-card">
+      <h4>Step A &mdash; Create a free account</h4>
+      <div class="guide-step"><span class="gn">1</span><span>Go to <a href="https://www.emailjs.com" target="_blank" style="color:#7a1c2e;font-weight:700">emailjs.com &#8599;</a> &rarr; click <strong>Sign Up Free</strong></span></div>
+      <div class="guide-step"><span class="gn">2</span><span>Verify your email and log in to the dashboard</span></div>
+    </div>
+
+    <div class="guide-card">
+      <h4>Step B &mdash; Connect your email (Gmail / Outlook)</h4>
+      <div class="guide-step"><span class="gn">1</span><span>In the dashboard, click <a href="https://dashboard.emailjs.com/admin" target="_blank" style="color:#7a1c2e;font-weight:700">Email Services &#8599;</a></span></div>
+      <div class="guide-step"><span class="gn">2</span><span>Click <strong>Add New Service</strong> &rarr; choose Gmail or Outlook</span></div>
+      <div class="guide-step"><span class="gn">3</span><span>Follow the prompts to connect your account &rarr; click <strong>Create Service</strong></span></div>
+      <div class="guide-step"><span class="gn">4</span><span>Copy the <strong>Service ID</strong> shown (looks like <code style="background:#ede8d8;padding:1px 4px;border-radius:3px">service_abc1234</code>)</span></div>
+    </div>
+
+    <div class="guide-card">
+      <h4>Step C &mdash; Create an email template</h4>
+      <div class="guide-step"><span class="gn">1</span><span>Click <a href="https://dashboard.emailjs.com/admin/templates/new" target="_blank" style="color:#7a1c2e;font-weight:700">Email Templates &#8599;</a> &rarr; <strong>Create New Template</strong></span></div>
+      <div class="guide-step"><span class="gn">2</span><span>Set these fields <strong>exactly</strong>:</span></div>
+      <div style="background:#fff;border:1px solid #ddd;border-radius:7px;padding:10px 12px;margin:6px 0 6px 26px;font-size:11px">
+        <div style="margin-bottom:6px"><span style="color:#999;min-width:90px;display:inline-block">To Email:</span> <code style="background:#ede8d8;padding:1px 5px;border-radius:3px">{{to_email}}</code></div>
+        <div style="margin-bottom:6px"><span style="color:#999;min-width:90px;display:inline-block">From Name:</span> <code style="background:#ede8d8;padding:1px 5px;border-radius:3px">{{from_name}}</code></div>
+        <div style="margin-bottom:6px"><span style="color:#999;min-width:90px;display:inline-block">From Email:</span> <code style="background:#ede8d8;padding:1px 5px;border-radius:3px">{{from_email}}</code> <span style="color:#e74c3c;font-size:10px">&#9650; uncheck "Use Default"</span></div>
+        <div style="margin-bottom:6px"><span style="color:#999;min-width:90px;display:inline-block">Subject:</span> <code style="background:#ede8d8;padding:1px 5px;border-radius:3px">{{subject}}</code></div>
+        <div style="margin-bottom:6px"><span style="color:#999;min-width:90px;display:inline-block">Reply To:</span> <code style="background:#ede8d8;padding:1px 5px;border-radius:3px">{{reply_to}}</code></div>
+        <div><span style="color:#999;min-width:90px;display:inline-block">Content:</span> <code style="background:#ede8d8;padding:1px 5px;border-radius:3px;color:#7a1c2e;font-weight:700">{{{message}}}</code> <span style="color:#e74c3c;font-size:10px">&#9650; 3 curly braces!</span></div>
+      </div>
+      <div class="guide-step"><span class="gn">3</span><span>Click <strong>Save</strong></span></div>
+      <div class="guide-step"><span class="gn">4</span><span>After saving, you'll see the Template ID in the URL bar: <br><code style="background:#ede8d8;padding:2px 6px;border-radius:3px;font-size:10px">dashboard.emailjs.com/admin/templates/<strong style="color:#7a1c2e">template_xxxxxxx</strong></code><br>— copy that ID (starts with <strong>template_</strong>)</span></div>
+      <div style="background:#ffeaea;border:1px solid #f5c6c6;border-radius:6px;padding:8px 10px;margin:6px 0 0 26px;font-size:10px;color:#7a1c2e;line-height:1.6">
+        <strong>⚠ Common error: "Template ID not found"</strong><br>
+        This means the Template ID was copied incorrectly. Go to <a href="https://dashboard.emailjs.com/admin/templates" target="_blank" style="color:#7a1c2e;font-weight:700">emailjs.com/admin/templates &#8599;</a>, open your template, and copy the ID from the page URL. It must start with <code style="background:#f8d7da;padding:1px 4px;border-radius:3px">template_</code>
+      </div>
+      <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:6px;padding:8px 10px;margin:6px 0 0 26px;font-size:10px;color:#856404;line-height:1.6"><strong>Why 3 braces?</strong> EmailJS uses <code>{{{message}}}</code> (triple) to render raw HTML. With only 2 braces the passport design will show as broken code instead of the invitation.</div>
+    </div>
+
+    <div class="guide-card">
+      <h4>Step D &mdash; Get your Public Key</h4>
+      <div class="guide-step"><span class="gn">1</span><span>Click <a href="https://dashboard.emailjs.com/admin/account/general" target="_blank" style="color:#7a1c2e;font-weight:700">Account &rarr; General &#8599;</a></span></div>
+      <div class="guide-step"><span class="gn">2</span><span>Copy the <strong>Public Key</strong> shown at the top of the page</span></div>
+    </div>
+
+    <div class="fg">
+      <label>Public Key</label>
+      <input type="text" id="ejs-pubkey" placeholder="aBcDeFgHiJkLmNoPq"/>
+      <div class="hint">Account &rarr; General &rarr; Public Key</div>
+    </div>
+    <div class="fg">
+      <label>Service ID</label>
+      <input type="text" id="ejs-service" placeholder="service_xxxxxxx"/>
+    </div>
+    <div class="fg">
+      <label>Template ID</label>
+      <input type="text" id="ejs-template" placeholder="template_xxxxxxx"/>
+      <div class="hint">Remember: use <code style="background:#ede8d8;padding:1px 4px;border-radius:3px">{{{message}}}</code> (3 braces) in the template body</div>
+    </div>
+    <div id="ejs-test-status" class="status-msg"></div>
+    <button class="btn-s" onclick="testEJS()" style="margin-top:6px">&#9654; Test connection</button>
+    <button class="btn-p" onclick="goStep(5,document.getElementById('stab-5'))">Next: Generate Website &rarr;</button>
+    <button class="btn-g" onclick="goStep(3,document.getElementById('stab-3'))">&#8592; Back</button>
+  </div>
+
+  <!-- STEP 5: Generate -->
+  <div class="step-panel" id="panel-5">
+    <div class="sec-title">Generate client website</div>
+    <div class="info-box"><strong>Everything is pre-filled and locked.</strong> The client just opens their website and clicks Send All. No editing needed.</div>
+    <div class="guide-card">
+      <h4>How to deploy to GitHub Pages</h4>
+      <div class="guide-step"><span class="gn">1</span><span>Click <strong>Generate &amp; Download</strong> below &mdash; you get one <code style="background:#ede8d8;padding:1px 4px;border-radius:3px;font-size:10px">index.html</code> file</span></div>
+      <div class="guide-step"><span class="gn">2</span><span>Go to <a href="https://github.com" target="_blank" style="color:#7a1c2e;font-weight:700">github.com &#8599;</a> &rarr; New repository &rarr; name it anything</span></div>
+      <div class="guide-step"><span class="gn">3</span><span>Upload the <code style="background:#ede8d8;padding:1px 4px;border-radius:3px;font-size:10px">index.html</code> file &rarr; commit</span></div>
+      <div class="guide-step"><span class="gn">4</span><span>Go to <strong>Settings &rarr; Pages &rarr; Deploy from branch &rarr; main</strong></span></div>
+      <div class="guide-step"><span class="gn">5</span><span>Share the URL <code style="background:#ede8d8;padding:1px 4px;border-radius:3px;font-size:10px">username.github.io/repo-name</code> with the client</span></div>
+    </div>
+    <div id="gen-status" class="status-msg"></div>
+    <button class="gen-btn" id="gen-btn" onclick="generateSite()" style="margin-top:4px">&#8681; Generate &amp; Download</button>
+    <button class="btn-g" onclick="goStep(4,document.getElementById('stab-4'))">&#8592; Back</button>
+  </div>
+</div>
+
+<!-- PREVIEW PANEL -->
+<div class="preview-panel">
+  <div class="preview-label">Live invitation preview</div>
+  <div class="passport-preview" id="invite-preview"></div>
+
+  <div class="gen-section" id="gen-section" style="display:none;margin-top:18px">
+    <div class="gen-title">Client website will include</div>
+    <div class="gen-files">
+      <div class="gen-file">
+        <span class="gen-file-icon">&#128196;</span>
+        <div><div class="gen-file-name">index.html</div><div class="gen-file-desc">One file — Send Dashboard + RSVP Tracker + Invitation Preview (3 tabs)</div></div>
+      </div>
+    </div>
+    <button class="gen-btn" id="gen-btn-2" onclick="generateSite()">&#8681; Generate &amp; Download</button>
+  </div>
+</div>
+</div>
+
+<!-- Send confirmation modal -->
+<div class="modal-overlay" id="modal-send-confirm">
+  <div class="modal-box">
+    <h3>&#9654; Send All Invitations</h3>
+    <p id="modal-send-msg">You are about to send personalized passport invitations to <strong id="modal-send-count">0</strong> guests. This cannot be undone. Proceed?</p>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="document.getElementById('modal-send-confirm').classList.remove('active')">Cancel</button>
+      <button class="modal-confirm" onclick="document.getElementById('modal-send-confirm').classList.remove('active');sendAllConfirmed()">Send All</button>
+    </div>
+  </div>
+</div>
+
+<!-- Photo size warning modal -->
+<div class="modal-overlay" id="modal-photo-warn">
+  <div class="modal-box">
+    <h3>&#9888; Large Photo Detected</h3>
+    <p>Your photo is larger than 300 KB. Large photos embedded in emails may be blocked or clipped by email clients, and will increase email size significantly for every guest.<br><br>The photo has been automatically compressed. You can also remove it and use a smaller image.</p>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="clearPhoto();document.getElementById('modal-photo-warn').classList.remove('active')">Remove Photo</button>
+      <button class="modal-confirm" onclick="document.getElementById('modal-photo-warn').classList.remove('active')">Keep Compressed</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var currentEvent='birthday',currentDesign='classic',celebrantPhoto='';
+
+var EVENTS={
+  birthday:{label:'Birthday Party',republic:'Republic of Celebrations',cover:'#8B1A1A',cover2:'#5a1010',gold:'#c8aa50',eyebrow:'You are invited to the',icon:'🎂',
+    fields:[
+      {id:'honoree',label:'Celebrant name',p:'Juan dela Cruz'},
+      {id:'age',label:'Turning (age)',p:'50'},
+      {id:'hosted_by',label:'Given / hosted by',p:'The dela Cruz Family'},
+      {id:'date',label:'Date',p:'December 25, 2025'},
+      {id:'time',label:'Time',p:'6:00 PM'},
+      {id:'venue',label:'Venue',p:'Barangay Hall, Makati'},
+      {id:'address',label:'Address',p:'123 Rizal St., Poblacion'},
+      {id:'theme_party',label:'Party theme (optional)',p:'Enchanted Forest'},
+      {id:'dress_code',label:'Motif / dress code',p:'Blue and White'},
+      {id:'activities',label:'Program / activities (optional)',p:'Games, intermission, special performances'},
+      {id:'loot_bag',label:'Loot bag / party favor note (optional)',p:'Tokens will be given to all guests'},
+      {id:'rsvp_name',label:'RSVP contact name',p:'Ate Maria'},
+      {id:'rsvp_contact',label:'RSVP number / FB / Messenger',p:'0917-123-4567'},
+      {id:'rsvp_deadline',label:'RSVP deadline',p:'December 20, 2025'},
+      {id:'parking',label:'Parking / directions (optional)',p:'Free parking at the back entrance'},
+      {id:'message',label:'Special message',p:'Come and celebrate with us!'}
+    ]},
+  wedding:{label:'Wedding',republic:'Republic of Love',cover:'#1a2a4a',cover2:'#0d1a30',gold:'#d4aa50',eyebrow:'Together with their families',icon:'💍',
+    fields:[
+      {id:'groom',label:"Groom's full name",p:'Juan dela Cruz'},
+      {id:'groom_parents',label:"Groom's parents",p:'Mr. & Mrs. Roberto dela Cruz'},
+      {id:'bride',label:"Bride's full name",p:'Maria Santos'},
+      {id:'bride_parents',label:"Bride's parents",p:'Mr. & Mrs. Eduardo Santos'},
+      {id:'civil_date',label:'Civil wedding date (optional)',p:'February 12, 2026'},
+      {id:'civil_venue',label:'Civil wedding venue (optional)',p:'Quezon City Hall'},
+      {id:'ceremony_date',label:'Ceremony date',p:'February 14, 2026'},
+      {id:'ceremony_time',label:'Ceremony time',p:'2:00 PM'},
+      {id:'ceremony_venue',label:'Church / ceremony venue',p:'Sto. Nino Parish Church'},
+      {id:'ceremony_address',label:'Church address',p:'Tondo, Manila'},
+      {id:'mass_type',label:'Mass / rite (optional)',p:'Catholic Wedding Mass'},
+      {id:'cocktail_time',label:'Cocktail hour (optional)',p:'4:30 PM'},
+      {id:'reception_time',label:'Reception time',p:'5:00 PM'},
+      {id:'reception_venue',label:'Reception venue',p:'Heritage Hotel Grand Ballroom'},
+      {id:'reception_address',label:'Reception address',p:'EDSA, Pasay City'},
+      {id:'dress_code',label:'Motif / dress code',p:'Ivory and Gold — Formal'},
+      {id:'attire_note',label:'Attire note (optional)',p:'Entourage in dusty rose, guests in ivory & gold'},
+      {id:'meal_pref',label:'Meal preference options (optional)',p:'Beef / Chicken / Fish / Vegetarian'},
+      {id:'best_man',label:'Best man',p:'Kuya Mark dela Cruz'},
+      {id:'maid_of_honor',label:'Maid of honor',p:'Ate Bea Santos'},
+      {id:'groomsmen',label:'Groomsmen (optional)',p:'Carlo, Nico, Paolo'},
+      {id:'bridesmaids',label:'Bridesmaids (optional)',p:'Ana, Clara, Trisha'},
+      {id:'cord_sponsors',label:'Cord sponsors (optional)',p:'Mr. & Mrs. Gomez'},
+      {id:'veil_sponsors',label:'Veil sponsors (optional)',p:'Mr. & Mrs. Reyes'},
+      {id:'candle_sponsors',label:'Candle sponsors (optional)',p:'Mr. & Mrs. Cruz'},
+      {id:'ring_bearer',label:'Ring bearer (optional)',p:'Little Marco Cruz'},
+      {id:'bible_bearer',label:'Bible bearer (optional)',p:'Little Paolo Reyes'},
+      {id:'flower_girls',label:'Flower girls (optional)',p:'Sofia Santos, Mia Reyes'},
+      {id:'rsvp_name',label:'RSVP contact name',p:'Ate Maria'},
+      {id:'rsvp_contact',label:'RSVP number / Messenger',p:'0917-123-4567'},
+      {id:'rsvp_deadline',label:'RSVP deadline',p:'February 1, 2026'},
+      {id:'hashtag',label:'Wedding hashtag (optional)',p:'#JuanAndMaria2026'},
+      {id:'registry',label:'Registry / wishlist link (optional)',p:'bit.ly/juanmaria-registry'},
+      {id:'honeymoon',label:'Honeymoon destination (optional)',p:'Bali, Indonesia'},
+      {id:'parking',label:'Parking / directions',p:'Valet parking available at the venue'},
+      {id:'message',label:'Message',p:'Your presence makes our day complete.'}
+    ]},
+  debut:{label:'Debut (18th Birthday)',republic:'Republic of Elegance',cover:'#6a1a5a',cover2:'#4a0f3e',gold:'#e8c0d0',eyebrow:'Cordially invites you to',icon:'👑',
+    fields:[
+      {id:'honoree',label:"Debutante's name",p:'Maria Corazon Santos'},
+      {id:'parents',label:"Parents' names",p:'Mr. & Mrs. Eduardo Santos'},
+      {id:'date',label:'Date',p:'March 15, 2026'},
+      {id:'time',label:'Time',p:'6:00 PM'},
+      {id:'venue',label:'Venue',p:'Shangri-La Ballroom, BGC'},
+      {id:'address',label:'Address',p:'5th Avenue, BGC'},
+      {id:'dress_code',label:'Motif / dress code (guests)',p:'Dusty Rose and Gold — Formal'},
+      {id:'entourage_attire',label:"Entourage motif / attire (optional)",p:'Dusty Rose gowns for ladies, navy suits for gentlemen'},
+      {id:'program_flow',label:'Program flow / timeline (optional)',p:'6PM cocktails · 7PM program · 8PM cotillion · 9PM open floor'},
+      {id:'cotillion',label:'Cotillion de Honor — 18 roses',p:'Kuya Miguel, Kuya Carlo...'},
+      {id:'treasures',label:'18 treasures (optional)',p:'Ate Ana, Ate Bea...'},
+      {id:'bills',label:'18 bills / monetary sponsors (optional)',p:'Tito Jose, Tita Maria...'},
+      {id:'rsvp_name',label:'RSVP contact',p:'Mommy Rosario'},
+      {id:'rsvp_contact',label:'RSVP number / Messenger',p:'0917-123-4567'},
+      {id:'rsvp_deadline',label:'RSVP deadline',p:'March 1, 2026'},
+      {id:'parking',label:'Parking / directions (optional)',p:'Free valet at main entrance'},
+      {id:'message',label:"Debutante's personal message",p:'Her most beautiful chapter begins tonight.'}
+    ]},
+  baptism:{label:'Baptism / Christening',republic:'Republic of Blessings',cover:'#1a3a6a',cover2:'#0f2448',gold:'#a8d0f0',eyebrow:'We joyfully invite you to the',icon:'🕊️',
+    fields:[
+      {id:'honoree',label:"Baby's full name",p:'Angel Marie dela Cruz'},
+      {id:'nickname',label:"Baby's nickname / called name",p:'Baby Angie'},
+      {id:'parents',label:"Parents' names",p:'Juan and Maria dela Cruz'},
+      {id:'date',label:'Date',p:'January 12, 2026'},
+      {id:'ceremony_time',label:'Baptism time',p:'10:00 AM'},
+      {id:'ceremony_venue',label:'Church',p:'Our Lady of Assumption Parish'},
+      {id:'ceremony_address',label:'Church address',p:'Makati City'},
+      {id:'priest',label:'Officiated by (optional)',p:'Fr. Jose Santos'},
+      {id:'reception_time',label:'Reception time',p:'12:00 PM'},
+      {id:'reception_venue',label:'Reception venue',p:'Barangay Covered Court'},
+      {id:'reception_address',label:'Reception address',p:'123 Sampaguita St.'},
+      {id:'ninong',label:'Ninong (Godfather)',p:'Mr. Jose Reyes'},
+      {id:'ninang',label:'Ninang (Godmother)',p:'Mrs. Ana Cruz'},
+      {id:'loot_bag',label:'Souvenir / token note (optional)',p:'Personalized tokens will be given to all guests'},
+      {id:'rsvp_contact',label:'RSVP contact / Messenger',p:'0917-123-4567'},
+      {id:'rsvp_deadline',label:'RSVP deadline',p:'January 8, 2026'},
+      {id:'message',label:'Message',p:'A new blessing joins our family.'}
+    ]},
+  fiesta:{label:'Fiesta / Town Fest',republic:'Republic of Festivities',cover:'#7a5a00',cover2:'#5a4000',gold:'#f0d060',eyebrow:'You are warmly invited to the',icon:'🎊',
+    fields:[
+      {id:'barangay',label:'Barangay / Place',p:'Barangay Sta. Cruz'},
+      {id:'patron',label:'Patron saint',p:'Nuestra Senora de Guadalupe'},
+      {id:'date',label:'Date',p:'December 12, 2025'},
+      {id:'mass_time',label:'Mass schedule',p:'6:00 AM & 8:00 AM'},
+      {id:'mass_venue',label:'Mass venue',p:'Sto. Nino Parish Church, Kawit'},
+      {id:'procession_time',label:'Procession time (optional)',p:'9:00 AM'},
+      {id:'procession_route',label:'Procession route (optional)',p:'Starting from the church around the barangay'},
+      {id:'time',label:'Main celebration time',p:'6:00 PM'},
+      {id:'venue',label:'Main venue',p:'Barangay Plaza'},
+      {id:'address',label:'Municipality',p:'Kawit, Cavite'},
+      {id:'host',label:'Hosted by',p:'Kapitan Ernesto Ramos and the Barangay Council'},
+      {id:'activities',label:'Activities / program',p:'Sayaw sa Bangko, Bingo, Cultural Show'},
+      {id:'rsvp_contact',label:'Contact / Messenger',p:'0917-123-4567'},
+      {id:'rsvp_deadline',label:'Confirm by',p:'December 8, 2025'},
+      {id:'message',label:'Message',p:'Come, eat, and celebrate with us!'}
+    ]},
+  christmas:{label:'Christmas / Noche Buena',republic:'Republic of Joy & Noche Buena',cover:'#5a1a1a',cover2:'#1a3a1a',gold:'#f0d060',eyebrow:'Wishing you a blessed',icon:'🎄',
+    fields:[
+      {id:'host',label:'Hosted by',p:'The dela Cruz Family'},
+      {id:'date',label:'Date',p:'December 24, 2025'},
+      {id:'time',label:'Time',p:'8:00 PM'},
+      {id:'venue',label:'Venue',p:'dela Cruz Residence'},
+      {id:'address',label:'Full address',p:'123 Sampaguita St., QC'},
+      {id:'dress_code',label:'Theme / dress code',p:'Red and Green — Christmas'},
+      {id:'potluck',label:'Potluck / what to bring (optional)',p:'Please bring a dish to share'},
+      {id:'monito_monita',label:'Monito Monita details (optional)',p:'Budget: ₱300 · Deadline: Dec 22'},
+      {id:'rsvp_contact',label:'RSVP contact / Messenger',p:'0917-123-4567'},
+      {id:'rsvp_deadline',label:'Confirm by',p:'December 20, 2025'},
+      {id:'parking',label:'Parking / directions (optional)',p:'Street parking available'},
+      {id:'message',label:'Message',p:'Spend this joyful night with our family.'}
+    ]},
+  graduation:{label:'Graduation',republic:'Republic of Achievement',cover:'#1a2a5a',cover2:'#0d1a3a',gold:'#c8aa50',eyebrow:'Proudly announcing the graduation of',icon:'🎓',
+    fields:[
+      {id:'honoree',label:'Graduate name',p:'Juan Carlos dela Cruz'},
+      {id:'parents',label:"Parents' names",p:'Mr. & Mrs. Roberto dela Cruz'},
+      {id:'degree',label:'Degree / Program',p:'BS Nursing'},
+      {id:'latin_honor',label:'Latin honor / award (optional)',p:'Magna Cum Laude'},
+      {id:'school',label:'School / University',p:'University of Santo Tomas'},
+      {id:'batch',label:'Batch / graduation class (optional)',p:'Nursing Class of 2026'},
+      {id:'graduation_date',label:'Graduation date',p:'June 20, 2026'},
+      {id:'graduation_time',label:'Ceremony time',p:'9:00 AM'},
+      {id:'graduation_venue',label:'Ceremony venue',p:'UST Quadricentennial Pavilion'},
+      {id:'graduation_address',label:'Venue address',p:'Espana Blvd., Sampaloc, Manila'},
+      {id:'date',label:'Party / celebration date',p:'June 21, 2026'},
+      {id:'time',label:'Party time',p:'6:00 PM'},
+      {id:'venue',label:'Party venue',p:"Tito Roger's Garden, QC"},
+      {id:'address',label:'Party address',p:'New Manila, QC'},
+      {id:'hosted_by',label:'Given / hosted by (optional)',p:'The dela Cruz Family'},
+      {id:'dress_code',label:'Dress code / motif (optional)',p:'Smart casual — Navy and Gold'},
+      {id:'rsvp_contact',label:'RSVP contact / Messenger',p:'0917-123-4567'},
+      {id:'rsvp_deadline',label:'RSVP deadline',p:'June 15, 2026'},
+      {id:'parking',label:'Parking / directions (optional)',p:'Free parking on site'},
+      {id:'message',label:"Graduate's message",p:'Years of hard work, finally worth it!'}
+    ]},
+  anniv:{label:'Anniversary',republic:'Republic of Everlasting Love',cover:'#4a1a7a',cover2:'#2d0f4a',gold:'#e0c0f0',eyebrow:'Joyfully celebrating',icon:'💝',
+    fields:[
+      {id:'couple',label:"Couple's names",p:'Juan and Maria dela Cruz'},
+      {id:'years',label:'Years together',p:'25'},
+      {id:'milestone',label:'Milestone label (optional)',p:'Silver Anniversary'},
+      {id:'children',label:"Children's names (optional)",p:'Mark, Ana, and Jose'},
+      {id:'vows_renewal',label:'Renewal of vows note (optional)',p:'Vows renewal ceremony at 6:00 PM'},
+      {id:'date',label:'Date',p:'February 14, 2026'},
+      {id:'time',label:'Time',p:'6:00 PM'},
+      {id:'venue',label:'Venue',p:'Fernwood Gardens, QC'},
+      {id:'address',label:'Address',p:'New Manila, QC'},
+      {id:'dress_code',label:'Motif / dress code',p:'Silver and White — Formal'},
+      {id:'video_link',label:'Video message / tribute link (optional)',p:'bit.ly/juanmaria25'},
+      {id:'rsvp_contact',label:'RSVP contact / Messenger',p:'0917-123-4567'},
+      {id:'rsvp_deadline',label:'RSVP deadline',p:'February 7, 2026'},
+      {id:'parking',label:'Parking / directions (optional)',p:'Free parking on site'},
+      {id:'message',label:'Message',p:'A love that grows stronger every year.'}
+    ]},
+  reunion:{label:'Family / Barkada Reunion',republic:'Republic of Family & Friends',cover:'#1a4a2a',cover2:'#0f2d1a',gold:'#a0e0b0',eyebrow:'You are warmly invited to our',icon:'🏠',
+    fields:[
+      {id:'group',label:'Family / Group name',p:'Dela Cruz Family'},
+      {id:'batch_label',label:'Batch / generation label (optional)',p:'3rd Generation Reunion'},
+      {id:'date',label:'Date',p:'December 27, 2025'},
+      {id:'time',label:'Time',p:'11:00 AM'},
+      {id:'venue',label:'Venue',p:"Lolo Cesar's Farm, Batangas"},
+      {id:'address',label:'Address / Directions',p:'Sitio Mabini, Tanauan, Batangas'},
+      {id:'dress_code',label:'Dress code / motif',p:'Casual — Yellow and White'},
+      {id:'potluck',label:'Potluck / dish assignment (optional)',p:'Surnames A–G: main dish · H–R: dessert · S–Z: drinks'},
+      {id:'contribution',label:'Contribution / entrance fee (optional)',p:'₱500 per family'},
+      {id:'activities',label:'Activities / program',p:'Parlor games, Bingo, Videoke, Raffle, Laro ng Lahi'},
+      {id:'host',label:'Organized by',p:'The Dela Cruz Family Association'},
+      {id:'rsvp_contact',label:'RSVP contact / Messenger',p:'0917-123-4567'},
+      {id:'rsvp_deadline',label:'Confirm by',p:'December 20, 2025'},
+      {id:'parking',label:'Directions / how to get there',p:'Take SLEX → Tanauan exit, follow signs'},
+      {id:'message',label:'Message',p:'Balik tayo! Sabay-sabay na nating salubungin ang bagong taon.'}
+    ]},
+  bday7:{label:'7th Birthday',republic:'Republic of Wonder & Play',cover:'#8a1a5a',cover2:'#6a0f40',gold:'#f8c8e0',eyebrow:'You are invited to the',icon:'🌸',
+    fields:[
+      {id:'honoree',label:"Birthday girl/boy's name",p:'Princess Sofia Santos'},
+      {id:'parents',label:"Given by (parents' names)",p:'Mommy Kris and Daddy Mark'},
+      {id:'date',label:'Date',p:'April 5, 2026'},
+      {id:'time',label:'Time',p:'3:00 PM'},
+      {id:'venue',label:'Venue',p:'Kiddie Party Hall, SM MOA'},
+      {id:'address',label:'Address',p:'Seaside Blvd, Pasay City'},
+      {id:'theme_party',label:'Party theme',p:'Princess and Fairies'},
+      {id:'dress_code',label:'Motif / dress code',p:'Pink and Purple'},
+      {id:'entertainers',label:'Kiddie program / entertainers (optional)',p:'Clown, magician, and mascot appearances'},
+      {id:'loot_bag',label:'Loot bag / party favor note (optional)',p:'Personalized goodie bags for all kids'},
+      {id:'parent_note',label:'Parent / guardian note (optional)',p:'Parents are welcome to stay. Drop-off also OK.'},
+      {id:'rsvp_contact',label:'RSVP contact / Messenger',p:'0917-123-4567'},
+      {id:'rsvp_deadline',label:'RSVP deadline',p:'April 1, 2026'},
+      {id:'parking',label:'Parking / directions (optional)',p:'MOA parking building C'},
+      {id:'message',label:'Message',p:'Come play and celebrate with our little princess!'}
+    ]}
+};
+
+var DESIGNS={
+  classic:{name:'Classic',emblem:'&#10022;',emblemStyle:'font-size:44px;filter:drop-shadow(0 0 6px rgba(200,170,80,0.35))',coverBg:'linear-gradient(160deg,#1b3d2a,#0e2018)',coverBgSolid:'#1b3d2a',coverText:'#fff',gold:'#c8aa50',pageBg:'#f5f0e4',pageText:'#1a1a1a',mrzBg:'#ede8d8',stampColor:'rgba(180,30,30,0.55)',stampText:'rgba(180,30,30,0.9)',font:'Cinzel,serif',bodyFont:'Special Elite,cursive',borderStyle:'1px solid rgba(0,0,0,0.1)',watermarkColor:'rgba(0,0,0,0.04)'},
+  minimalist:{name:'Minimalist',emblem:'&#9670;',emblemStyle:'font-size:28px',coverBg:'linear-gradient(160deg,#1a1a2e,#16213e)',coverBgSolid:'#1a1a2e',coverText:'#fff',gold:'#e0e0e0',pageBg:'#ffffff',pageText:'#111',mrzBg:'#f0f0f0',stampColor:'rgba(26,26,46,0.5)',stampText:'rgba(26,26,46,0.8)',font:'Lato,sans-serif',bodyFont:'Lato,sans-serif',borderStyle:'1px solid #e0e0e0',watermarkColor:'rgba(0,0,0,0.03)'},
+  vintage:{name:'Vintage',emblem:'&#10016;',emblemStyle:'font-size:38px',coverBg:'linear-gradient(160deg,#4a3728,#2d1f14)',coverBgSolid:'#4a3728',coverText:'#f5deb3',gold:'#d4a853',pageBg:'#f2e8d5',pageText:'#2d1f14',mrzBg:'#e8d8b8',stampColor:'rgba(101,50,20,0.6)',stampText:'rgba(101,50,20,0.9)',font:'IM Fell English,serif',bodyFont:'Special Elite,cursive',borderStyle:'2px solid rgba(101,50,20,0.2)',watermarkColor:'rgba(101,50,20,0.06)'},
+  luxury:{name:'Luxury',emblem:'&#9670; &#9670; &#9670;',emblemStyle:'font-size:18px;letter-spacing:2px',coverBg:'linear-gradient(160deg,#0a0a0a,#1a1a1a)',coverBgSolid:'#0a0a0a',coverText:'#fff',gold:'#c8a850',pageBg:'#fafafa',pageText:'#111',mrzBg:'#111',stampColor:'rgba(200,168,80,0.7)',stampText:'rgba(200,168,80,0.95)',font:'Cinzel,serif',bodyFont:'Cinzel,serif',borderStyle:'1px solid rgba(200,168,80,0.3)',watermarkColor:'rgba(200,168,80,0.05)'},
+  tropical:{name:'Tropical',emblem:'&#9728;',emblemStyle:'font-size:44px;filter:drop-shadow(0 0 8px rgba(255,209,102,0.5))',coverBg:'linear-gradient(160deg,#0077b6,#023e8a)',coverBgSolid:'#0077b6',coverText:'#fff',gold:'#ffd166',pageBg:'#fff9f0',pageText:'#1a1a1a',mrzBg:'#e8f4fd',stampColor:'rgba(220,80,0,0.55)',stampText:'rgba(220,80,0,0.9)',font:'Cinzel,serif',bodyFont:'Special Elite,cursive',borderStyle:'1px solid rgba(0,119,182,0.15)',watermarkColor:'rgba(0,119,182,0.05)'}
+};
+
+function goStep(n,btn){
+  document.querySelectorAll('.step-tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.step-panel').forEach(function(p){p.classList.remove('active');});
+  btn.classList.add('active');
+  document.getElementById('panel-'+n).classList.add('active');
+  if(n===5)document.getElementById('gen-section').style.display='block';
+}
+// Draft autosave - declared here so setEvent/setDesign/addMulti can call autoSave()
+var _draftTimer=null;
+function autoSave(){
+  clearTimeout(_draftTimer);
+  _draftTimer=setTimeout(saveDraft,800);
+}
+function validateAndNextStep3(){
+  var cfg=EVENTS[currentEvent];
+  var missing=[];
+  // Check required fields (those without 'optional' in their label)
+  cfg.fields.forEach(function(f){
+    if(f.label.toLowerCase().indexOf('optional')!==-1)return;
+    if(isMultiField(f.id))return; // multi-lists are always optional in validation
+    var val=gf(f.id);
+    if(!val)missing.push(f.label);
+  });
+  var errEl=document.getElementById('step3-error');
+  if(missing.length){
+    errEl.style.display='block';
+    errEl.innerHTML='&#9888; Please fill in the following required fields:<br><strong>'+missing.join(', ')+'</strong>';
+    errEl.scrollIntoView({behavior:'smooth',block:'nearest'});
+    return;
+  }
+  errEl.style.display='none';
+  goStep(4,document.getElementById('stab-4'));
+}
+function setEvent(t){
+  currentEvent=t;
+  document.querySelectorAll('.event-btn').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('ebtn-'+t).classList.add('active');
+  renderFields();refreshPreview();autoSave();
+}
+function setDesign(d){
+  currentDesign=d;
+  document.querySelectorAll('.design-btn').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('dbtn-'+d).classList.add('active');
+  refreshPreview();autoSave();
+}
+function renderEventGrid(){
+  var g=document.getElementById('event-grid'),html='';
+  Object.keys(EVENTS).forEach(function(k){
+    var ev=EVENTS[k];
+    html+='<button class="event-btn'+(k===currentEvent?' active':'')+'" id="ebtn-'+k+'" onclick="setEvent(\''+k+'\')">'
+      +'<span class="ei">'+ev.icon+'</span>'+ev.label+'</button>';
+  });
+  g.innerHTML=html;
+}
+function renderDesignGrid(){
+  var g=document.getElementById('design-grid'),html='';
+  var colors={classic:'linear-gradient(135deg,#1b3d2a,#0e2018)',minimalist:'linear-gradient(135deg,#1a1a2e,#16213e)',vintage:'linear-gradient(135deg,#4a3728,#2d1f14)',luxury:'linear-gradient(135deg,#0a0a0a,#1a1a1a)',tropical:'linear-gradient(135deg,#0077b6,#023e8a)'};
+  var subs={classic:'Green & gold',minimalist:'Navy & clean',vintage:'Sepia & aged',luxury:'Black & gold',tropical:'Blue & sun'};
+  Object.keys(DESIGNS).forEach(function(k){
+    html+='<button class="design-btn'+(k===currentDesign?' active':'')+'" id="dbtn-'+k+'" onclick="setDesign(\''+k+'\')">'
+      +'<span class="design-preview" style="background:'+colors[k]+'"></span>'
+      +'<span class="design-label">'+DESIGNS[k].name+'</span>'
+      +'<span class="design-sub">'+subs[k]+'</span>'
+      +'</button>';
+  });
+  g.innerHTML=html;
+}
+var multiLists={};
+
+// Fields that use the multi-entry list UI
+var MULTI_FIELDS=['ninong','ninang','groomsmen','bridesmaids',
+  'cord_sponsors','veil_sponsors','candle_sponsors','flower_girls',
+  'cotillion','treasures','bills'];
+
+function isMultiField(id){return MULTI_FIELDS.indexOf(id)!==-1;}
+
+function renderFields(){
+  var f=EVENTS[currentEvent].fields,html='';
+  // Reset multi-lists when switching events
+  multiLists={};
+  MULTI_FIELDS.forEach(function(id){multiLists[id]=[''];});
+  f.forEach(function(x){
+    if(isMultiField(x.id)){
+      html+='<div class="fg" id="fg-'+x.id+'">';
+      html+='<label>'+x.label+'</label>';
+      html+=renderMultiRows(x.id,x.label);
+      html+='</div>';
+    } else {
+      html+='<div class="fg"><label>'+x.label+'</label>';
+      html+=x.ta
+        ?'<textarea id="ff-'+x.id+'" placeholder="'+x.p+'" oninput="refreshPreview()"></textarea>'
+        :'<input type="text" id="ff-'+x.id+'" placeholder="'+x.p+'" oninput="refreshPreview()"/>';
+      html+='</div>';
+    }
+  });
+  document.getElementById('dynamic-fields').innerHTML=html;
+}
+
+function renderMultiRows(id,label){
+  var list=multiLists[id]||[''];
+  var singularLabel=label.replace(/ \(optional\)/i,'').replace(/s$/,'');
+  var html='<div id="ml-'+id+'">';
+  list.forEach(function(val,i){
+    html+='<div style="display:flex;gap:5px;margin-bottom:5px;align-items:center">'
+      +'<input type="text" placeholder="'+singularLabel+' '+(i+1)+'" value="'+val+'" '
+      +'oninput="multiLists[\''+id+'\']['+i+']=this.value;refreshPreview()" '
+      +'style="flex:1;padding:7px 9px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:Lato,sans-serif"/>'
+      +(list.length>1?'<button onclick="removeMulti(\''+id+'\','+i+')" style="background:none;border:1px solid #ddd;border-radius:6px;color:#bbb;cursor:pointer;padding:5px 8px;font-size:12px" onmouseover="this.style.color=\'#e74c3c\'" onmouseout="this.style.color=\'#bbb\'">&#10005;</button>':'')
+      +'</div>';
+  });
+  html+='</div>';
+  html+='<button onclick="addMulti(\''+id+'\')" style="width:100%;padding:6px;border:1.5px dashed #ccc;border-radius:6px;background:none;color:#999;cursor:pointer;font-size:11px;margin-top:2px" '
+    +'onmouseover="this.style.borderColor=\'#7a1c2e\';this.style.color=\'#7a1c2e\'" onmouseout="this.style.borderColor=\'#ccc\';this.style.color=\'#999\'">+ Add '+singularLabel+'</button>';
+  return html;
+}
+
+function addMulti(id){
+  if(!multiLists[id])multiLists[id]=[''];
+  multiLists[id].push('');
+  refreshMultiField(id);
+  autoSave();
+}
+
+function removeMulti(id,idx){
+  multiLists[id].splice(idx,1);
+  if(!multiLists[id].length)multiLists[id]=[''];
+  refreshMultiField(id);
+  refreshPreview();
+  autoSave();
+}
+
+function refreshMultiField(id){
+  var fg=document.getElementById('fg-'+id);
+  if(!fg)return;
+  var fieldDef=EVENTS[currentEvent].fields.find(function(f){return f.id===id;});
+  var label=fieldDef?fieldDef.label:id;
+  fg.innerHTML='<label>'+label+'</label>'+renderMultiRows(id,label);
+}
+
+function getMultiList(id){
+  var list=multiLists[id]||[];
+  return list.filter(function(v){return v.trim();});
+}
+
+// Keep backward-compatible sponsor aliases
+function addSponsor(type){addMulti(type);}
+function removeSponsor(type,idx){removeMulti(type,idx);}
+
+function gf(id){
+  if(isMultiField(id)) return getMultiList(id).join(', ');
+  var e=document.getElementById('ff-'+id);return e?e.value.trim():'';
+}
+function gv(id){var e=document.getElementById(id);return e?e.value.trim():'';}
+function handlePhoto(input){
+  if(!input.files||!input.files[0])return;
+  var file=input.files[0];
+  var r=new FileReader();
+  r.onload=function(e){
+    var original=e.target.result;
+    var img=new Image();
+    img.onload=function(){
+      // Compress to max 600px wide and JPEG quality 0.75
+      var canvas=document.createElement('canvas');
+      var maxW=600,maxH=800;
+      var w=img.width,h=img.height;
+      if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}
+      if(h>maxH){w=Math.round(w*maxH/h);h=maxH;}
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      var compressed=canvas.toDataURL('image/jpeg',0.75);
+      var largeOriginal=(file.size>300*1024);
+      celebrantPhoto=compressed;
+      document.getElementById('photo-area').innerHTML='<img src="'+compressed+'" style="width:100%;max-height:100px;object-fit:cover;border-radius:4px"/>';
+      document.getElementById('photo-clear').style.display='block';
+      refreshPreview();
+      if(largeOriginal){document.getElementById('modal-photo-warn').classList.add('active');}
+    };
+    img.src=original;
+  };
+  r.readAsDataURL(file);
+}
+function clearPhoto(){
+  celebrantPhoto='';
+  document.getElementById('photo-area').innerHTML='<span style="font-size:26px">&#128247;</span><span style="font-size:11px;color:#aaa;margin-top:3px;display:block">Click to upload photo</span><span style="font-size:10px;color:#ccc">Appears in passport photo box</span>';
+  document.getElementById('photo-clear').style.display='none';
+  document.getElementById('photo-input').value='';
+  refreshPreview();
+}
+function getEventData(){
+  var d={};
+  EVENTS[currentEvent].fields.forEach(function(f){d[f.id]=gf(f.id);});
+  d.host_email=gv('host-email');
+  d.sender_name=gv('sender-name');
+  return d;
+}
+function getMainTitle(){
+  var d=getEventData(),e=currentEvent;
+  if(e==='wedding')return(d.groom||'Groom')+' & '+(d.bride||'Bride');
+  if(e==='anniv')return d.couple||'The Couple';
+  if(e==='fiesta')return d.barangay||'Fiesta';
+  if(e==='christmas')return d.host||'Christmas Party';
+  if(e==='reunion')return d.group||'Reunion';
+  if(e==='baptism')return d.honoree||'Baby';
+  return d.honoree||'Celebrant';
+}
+function getSubTitle(){
+  var d=getEventData(),e=currentEvent;
+  if(e==='wedding')return(d.ceremony_date||'')+(d.ceremony_time?' - '+d.ceremony_time:'');
+  if(e==='anniv')return d.years?d.years+' years of love':'Anniversary';
+  if(e==='fiesta')return d.patron||'Patron Saint';
+  if(e==='graduation')return d.degree||'';
+  if(e==='baptism')return d.parents?'Parents: '+d.parents:'';
+  if(e==='bday7')return d.theme_party||'';
+  return d.date||'';
+}
+function buildDetails(d){
+  var e=currentEvent;
+  if(e==='wedding')return[
+    ['Ceremony Date',(d.ceremony_date||'—')],
+    ['Ceremony Time',d.ceremony_time||'—'],
+    ['Church / Venue',d.ceremony_venue||'—'],
+    ['Church Address',d.ceremony_address||'—'],
+    ['Mass / Rite',d.mass_type||'—'],
+    ['Cocktail Hour',d.cocktail_time||'—'],
+    ['Reception Time',d.reception_time||'—'],
+    ['Reception Venue',d.reception_venue||'—'],
+    ['Reception Address',d.reception_address||'—'],
+    ['Motif / Dress Code',d.dress_code||'—']
+  ];
+  if(e==='baptism')return[
+    ['Date & Time',(d.date||'—')+'<br>'+(d.ceremony_time||'')],
+    ['Church',d.ceremony_venue||'—'],
+    ['Church Address',d.ceremony_address||'—'],
+    ['Reception Time',d.reception_time||'—'],
+    ['Reception Venue',d.reception_venue||'—'],
+    ['Reception Address',d.reception_address||'—']
+  ];
+  if(e==='graduation')return[
+    ['Graduation',(d.graduation_date||'—')+'<br>'+(d.graduation_time||'')],
+    ['Ceremony Venue',d.graduation_venue||'—'],
+    ['Venue Address',d.graduation_address||'—'],
+    ['Party Date & Time',(d.date||'—')+'<br>'+(d.time||'')],
+    ['Party Venue',d.venue||'—'],
+    ['Party Address',d.address||'—']
+  ];
+  if(e==='fiesta')return[
+    ['Date',(d.date||'—')],['Time',d.time||'—'],
+    ['Venue',d.venue||'—'],['Municipality',d.address||'—'],
+    ['Patron Saint',d.patron||'—'],['Hosted by',d.host||'—']
+  ];
+  return[
+    ['Date',d.date||d.ceremony_date||'—'],
+    ['Time',d.time||d.ceremony_time||'—'],
+    ['Venue',d.venue||d.ceremony_venue||'—'],
+    ['Address',d.address||'—']
+  ];
+}
+function buildPassportInvite(guestName,forDownload){
+  var cfg=EVENTS[currentEvent],ds=DESIGNS[currentDesign],d=getEventData();
+  var mainTitle=getMainTitle(),subTitle=getSubTitle(),eventLabel=cfg.label;
+  var displayGuest=guestName||'Honoured Guest';
+  var hostEmail=d.host_email||'',rsvpName=d.rsvp_name||'',rsvpContact=d.rsvp_contact||'';
+  var rsvpDeadline=d.rsvp_deadline||'',message=d.message||'';
+  var details=buildDetails(d);
+  var attendS=encodeURIComponent('RSVP - ATTENDING: '+eventLabel+' ('+mainTitle+')');
+  var declineS=encodeURIComponent('RSVP - DECLINING: '+eventLabel+' ('+mainTitle+')');
+  var attendB=encodeURIComponent('Dear Host,\n\nI will be ATTENDING your '+eventLabel+'.\n\nGuest: '+displayGuest+'\n\n- '+displayGuest);
+  var declineB=encodeURIComponent('Dear Host,\n\nI cannot attend your '+eventLabel+'.\n\nGuest: '+displayGuest+'\n\n- '+displayGuest);
+  // Use URL-based auto-RSVP if siteUrl is set, otherwise fallback to mailto
+  var siteUrlVal=gv('site-url').replace(/\/+$/,'');
+  var guestKey=encodeURIComponent('__GNAME_RAW__');
+  var attendLink=siteUrlVal
+    ? siteUrlVal+'?rsvp=attend&g='+guestKey
+    : 'mailto:'+hostEmail+'?subject='+attendS+'&body='+attendB;
+  var declineLink=siteUrlVal
+    ? siteUrlVal+'?rsvp=decline&g='+guestKey
+    : 'mailto:'+hostEmail+'?subject='+declineS+'&body='+declineB;
+  var attendMailto=attendLink;
+  var declineMailto=declineLink;
+  var mrzDate=(new Date().getFullYear()+'').slice(2)+'1231';
+  var mrzLine1='P&lt;PHL '+(displayGuest.toUpperCase().replace(/\s+/g,'<')+'<<<<<<<<<<<<<<<<<<<<<<<<<').slice(0,32);
+  var mrzLine2='INV'+mrzDate+'0PHL'+mrzDate+'0'+(mainTitle.replace(/\s+/g,'').toUpperCase()+'000000000').slice(0,9)+'&lt;1';
+  var pageBg=ds.pageBg,pageText=ds.pageText,gold=ds.gold,coverBg=ds.coverBg,coverBgSolid=ds.coverBgSolid;
+  var headFont=ds.font.includes('Cinzel')?'Cinzel,Georgia,serif':ds.font.includes('Lato')?'Lato,Arial,sans-serif':ds.font.includes('IM Fell')?'"IM Fell English",Georgia,serif':ds.font;
+  var bodyFont=ds.bodyFont.includes('Special Elite')?'"Special Elite",Georgia,serif':ds.bodyFont.includes('Cinzel')?'Cinzel,Georgia,serif':ds.bodyFont.includes('Lato')?'Lato,Arial,sans-serif':ds.bodyFont;
+  var borderStyle=ds.borderStyle;
+  var dlabel=currentDesign==='luxury'?gold:'#999';
+  var dbg=currentDesign==='luxury'?'rgba(200,168,80,0.07)':'rgba(0,0,0,0.04)';
+  var isDark=currentDesign==='luxury',isVintage=currentDesign==='vintage',isMinimal=currentDesign==='minimalist';
+
+  // Security grid pattern on inner pages
+  var secPattern=isDark
+    ?'repeating-linear-gradient(0deg,transparent,transparent 18px,rgba(200,168,80,0.04) 18px,rgba(200,168,80,0.04) 19px),repeating-linear-gradient(90deg,transparent,transparent 18px,rgba(200,168,80,0.04) 18px,rgba(200,168,80,0.04) 19px)'
+    :isVintage
+    ?'repeating-linear-gradient(0deg,transparent,transparent 14px,rgba(101,50,20,0.04) 14px,rgba(101,50,20,0.04) 15px),repeating-linear-gradient(90deg,transparent,transparent 14px,rgba(101,50,20,0.04) 14px,rgba(101,50,20,0.04) 15px)'
+    :'repeating-linear-gradient(0deg,transparent,transparent 16px,rgba(0,0,0,0.022) 16px,rgba(0,0,0,0.022) 17px),repeating-linear-gradient(90deg,transparent,transparent 16px,rgba(0,0,0,0.022) 16px,rgba(0,0,0,0.022) 17px)';
+
+  var coverPattern='repeating-linear-gradient(135deg,transparent,transparent 12px,rgba(255,255,255,0.022) 12px,rgba(255,255,255,0.022) 13px)';
+
+  // Corner ornaments for cover
+  var cornerOrnaments=''
+    +'<div style="position:absolute;top:10px;left:10px;width:20px;height:20px;border-top:1.5px solid '+gold+';border-left:1.5px solid '+gold+';opacity:.5;z-index:2"></div>'
+    +'<div style="position:absolute;top:10px;right:10px;width:20px;height:20px;border-top:1.5px solid '+gold+';border-right:1.5px solid '+gold+';opacity:.5;z-index:2"></div>'
+    +'<div style="position:absolute;bottom:42px;left:10px;width:20px;height:20px;border-bottom:1.5px solid '+gold+';border-left:1.5px solid '+gold+';opacity:.5;z-index:2"></div>'
+    +'<div style="position:absolute;bottom:42px;right:10px;width:20px;height:20px;border-bottom:1.5px solid '+gold+';border-right:1.5px solid '+gold+';opacity:.5;z-index:2"></div>';
+
+  var pageCorners=''
+    +'<div style="position:absolute;top:34px;left:8px;width:12px;height:12px;border-top:1px solid '+gold+';border-left:1px solid '+gold+';opacity:.25;z-index:2"></div>'
+    +'<div style="position:absolute;top:34px;right:8px;width:12px;height:12px;border-top:1px solid '+gold+';border-right:1px solid '+gold+';opacity:.25;z-index:2"></div>'
+    +'<div style="position:absolute;bottom:40px;left:8px;width:12px;height:12px;border-bottom:1px solid '+gold+';border-left:1px solid '+gold+';opacity:.25;z-index:2"></div>'
+    +'<div style="position:absolute;bottom:40px;right:8px;width:12px;height:12px;border-bottom:1px solid '+gold+';border-right:1px solid '+gold+';opacity:.25;z-index:2"></div>';
+
+  // Build animated Philippine passport-inspired SVG badge
+  function makeBadge(g,bg){
+    var uid='b'+Math.random().toString(36).slice(2,8);
+    // 3 five-pointed stars at top
+    function star(tx,ty,s){
+      var pts='0,-4 1.2,-1.2 4,-1.2 2,0.8 3,3.8 0,2 -3,3.8 -2,0.8 -4,-1.2 -1.2,-1.2';
+      return '<polygon points="'+pts+'" fill="'+g+'" transform="translate('+tx+','+ty+') scale('+s+')"/>';
+    }
+    // 12 ray lines for rotating group
+    var rays='';
+    for(var a=0;a<360;a+=30){
+      rays+='<line x1="0" y1="-55" x2="0" y2="-44" stroke="'+g+'" stroke-width="2" stroke-linecap="round" transform="rotate('+a+')"/>';
+    }
+    // 8 short inner ticks for counter-rotating group
+    var innerTicks='';
+    for(var b=0;b<360;b+=45){
+      innerTicks+='<line x1="0" y1="-35" x2="0" y2="-28" stroke="'+g+'" stroke-width="1" stroke-linecap="round" opacity="0.5" transform="rotate('+b+')"/>';
+    }
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-62 -62 124 124" width="88" height="88" style="display:block;margin:0 auto 6px;overflow:visible">'
+      // Embedded keyframe animations — unique IDs prevent conflicts when multiple badges exist
+      +'<style>'
+      +'.'+uid+'-spin{transform-origin:0 0;animation:'+uid+'spin 18s linear infinite}'
+      +'.'+uid+'-rspin{transform-origin:0 0;animation:'+uid+'rspin 12s linear infinite}'
+      +'.'+uid+'-pulse{animation:'+uid+'pulse 2.8s ease-in-out infinite}'
+      +'.'+uid+'-pulse2{animation:'+uid+'pulse 2.8s ease-in-out 1.4s infinite}'
+      +'.'+uid+'-glow{animation:'+uid+'glow 2.5s ease-in-out infinite}'
+      +'@keyframes '+uid+'spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}'
+      +'@keyframes '+uid+'rspin{from{transform:rotate(0deg)}to{transform:rotate(-360deg)}}'
+      +'@keyframes '+uid+'pulse{0%,100%{opacity:0;r:58}50%{opacity:0.55;r:62}}'  // fallback — actual done via opacity
+      +'@keyframes '+uid+'glow{0%,100%{opacity:0.75}50%{opacity:1}}'
+      +'</style>'
+      // Pulsing outer rings
+      +'<circle r="60" fill="none" stroke="'+g+'" stroke-width="0.6" class="'+uid+'-pulse" opacity="0"/>'
+      +'<circle r="64" fill="none" stroke="'+g+'" stroke-width="0.3" class="'+uid+'-pulse2" opacity="0"/>'
+      // Static outer border rings
+      +'<circle r="58" fill="none" stroke="'+g+'" stroke-width="0.8" opacity=".35"/>'
+      +'<circle r="54" fill="none" stroke="'+g+'" stroke-width="0.3" opacity=".18"/>'
+      // Rotating outer rays
+      +'<g class="'+uid+'-spin">'+rays+'</g>'
+      // Static filled inner circle
+      +'<circle r="40" fill="'+bg+'" stroke="'+g+'" stroke-width="1.5" opacity=".9"/>'
+      +'<circle r="34" fill="none" stroke="'+g+'" stroke-width="0.5" opacity=".4"/>'
+      // Counter-rotating inner ticks
+      +'<g class="'+uid+'-rspin">'+innerTicks+'</g>'
+      // 8-pointed star (glowing)
+      +'<polygon class="'+uid+'-glow" points="0,-26 4.5,-9 17,-17 9,-4.5 26,0 9,4.5 17,17 4.5,9 0,26 -4.5,9 -17,17 -9,4.5 -26,0 -9,-4.5 -17,-17 -4.5,-9" fill="'+g+'" opacity=".95"/>'
+      // Shimmer overlay star (very slow rotate)
+      +'<polygon style="transform-origin:0 0;animation:'+uid+'spin 35s linear infinite" points="0,-26 4.5,-9 17,-17 9,-4.5 26,0 9,4.5 17,17 4.5,9 0,26 -4.5,9 -17,17 -9,4.5 -26,0 -9,-4.5 -17,-17 -4.5,-9" fill="rgba(255,255,255,0.08)"/>'
+      // Center circle + dot (glowing)
+      +'<circle r="8" fill="'+bg+'" stroke="'+g+'" stroke-width="1"/>'
+      +'<circle r="4.5" fill="'+g+'" class="'+uid+'-glow"/>'
+      // 3 top stars
+      +star(-18,-44,0.9)+star(0,-47,0.9)+star(18,-44,0.9)
+      +'</svg>';
+  }
+  var emblem=makeBadge(gold,coverBgSolid);
+
+  var spine='<div style="position:absolute;left:0;top:0;bottom:0;width:18px;background:linear-gradient(90deg,rgba(0,0,0,0.55),rgba(0,0,0,0.15) 55%,transparent);pointer-events:none;z-index:4"></div>'
+    +'<div style="position:absolute;left:18px;top:0;bottom:0;width:1px;background:linear-gradient(180deg,transparent,rgba(0,0,0,0.12) 20%,rgba(0,0,0,0.12) 80%,transparent);pointer-events:none;z-index:4"></div>';
+  var spineR='<div style="position:absolute;right:0;top:0;bottom:0;width:4px;background:linear-gradient(270deg,rgba(0,0,0,0.12),transparent);pointer-events:none;z-index:4"></div>';
+  var watermark='<div style="position:absolute;font-size:160px;color:'+ds.watermarkColor+';top:50%;left:55%;transform:translate(-50%,-50%) rotate(-15deg);pointer-events:none;line-height:1;font-family:'+headFont+';z-index:0;letter-spacing:-8px">&#10022;&#10022;</div>';
+  var pageStyle='position:absolute;top:0;left:0;right:0;bottom:0;overflow:hidden;';
+
+  function nav(active,total,isCover){
+    var navBg=isCover?'rgba(0,0,0,0.3)':pageBg;
+    var btnColor=isCover?gold:'#888';
+    var btnBorder=isCover?'rgba(255,255,255,0.25)':'rgba(0,0,0,0.12)';
+    var s='<div style="position:absolute;bottom:0;left:0;right:0;height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:'+navBg+';z-index:20;border-top:'+(isCover?'none':'1px solid rgba(0,0,0,0.06)')+';">';
+    s+=active>0?'<button onclick="ppPrev(this)" style="background:none;border:1px solid '+btnBorder+';border-radius:20px;padding:3px 11px;font-size:9.5px;font-family:Lato,sans-serif;color:'+btnColor+';cursor:pointer;letter-spacing:.5px">&#8592; Back</button>':'<span style="width:60px"></span>';
+    s+='<div style="display:flex;gap:5px;align-items:center">';
+    for(var i=0;i<total;i++){
+      var a=i===active;
+      s+='<div class="pp-dot" style="width:'+(a?'14px':'5px')+';height:5px;border-radius:3px;background:'+(a?gold:(isCover?'rgba(255,255,255,0.3)':'rgba(0,0,0,0.15)'))+';transition:all .4s ease"></div>';
+    }
+    s+='</div>';
+    s+=active<total-1?'<button onclick="ppNext(this)" style="background:none;border:1px solid '+btnBorder+';border-radius:20px;padding:3px 11px;font-size:9.5px;font-family:Lato,sans-serif;color:'+btnColor+';cursor:pointer;letter-spacing:.5px">Next &#8594;</button>':'<span style="width:60px"></span>';
+    return s+'</div>';
+  }
+
+  function field(label,val){
+    return '<div style="margin-bottom:7px;position:relative;z-index:2">'
+      +'<div style="font-size:7px;letter-spacing:2.5px;text-transform:uppercase;color:'+dlabel+';margin-bottom:1px;font-family:Lato,sans-serif;opacity:.8">'+label+'</div>'
+      +'<div style="font-family:'+bodyFont+';font-size:12px;color:'+pageText+';border-bottom:1px solid rgba(0,0,0,0.09);padding-bottom:2px;letter-spacing:.2px;line-height:1.4">'+(val||'&mdash;')+'</div>'
+      +'</div>';
+  }
+  function stampBox(label,val){
+    return '<div style="background:'+dbg+';border:'+borderStyle+';border-radius:5px;padding:7px 9px;position:relative;z-index:2;overflow:hidden">'
+      +'<div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,'+gold+'55,transparent,'+gold+'55)"></div>'
+      +'<div style="font-size:7px;letter-spacing:2px;text-transform:uppercase;color:'+dlabel+';margin-bottom:2px;font-family:Lato,sans-serif;opacity:.8">'+label+'</div>'
+      +'<div style="font-family:'+bodyFont+';font-size:12px;color:'+pageText+';line-height:1.35">'+(val||'&mdash;')+'</div>'
+      +'</div>';
+  }
+  function sponsorField(label,list){
+    if(!list||!list.length)return '';
+    var items=list.filter(function(v){return v.trim();});
+    if(!items.length)return '';
+    return '<div style="margin-bottom:8px;position:relative;z-index:2">'
+      +'<div style="font-size:7px;letter-spacing:2.5px;text-transform:uppercase;color:'+dlabel+';margin-bottom:4px;font-family:Lato,sans-serif;opacity:.8;border-bottom:1px solid rgba(0,0,0,0.07);padding-bottom:2px">'+label+'</div>'
+      +items.map(function(n,i){
+        return '<div style="display:flex;align-items:baseline;gap:6px;padding:2px 0;border-bottom:1px dotted rgba(0,0,0,0.07)">'
+          +'<span style="font-size:8px;color:'+gold+';font-family:'+headFont+';min-width:14px;opacity:.9;flex-shrink:0">'+(i+1)+'.</span>'
+          +'<span style="font-family:'+bodyFont+';font-size:11px;color:'+pageText+';line-height:1.5">'+n+'</span>'
+          +'</div>';
+      }).join('')
+      +'</div>';
+  }
+
+  var photoBox=celebrantPhoto
+    ?'<div style="position:relative;flex-shrink:0"><img src="'+celebrantPhoto+'" style="width:72px;height:90px;object-fit:cover;border-radius:2px;display:block;border:2px solid rgba(0,0,0,0.15)"/><div style="position:absolute;top:0;left:0;right:0;bottom:0;border-radius:2px;box-shadow:inset 0 0 0 1px rgba(255,255,255,0.2)"></div></div>'
+    :'<div style="width:72px;min-width:72px;height:90px;border:1px solid '+gold+';border-radius:2px;background:'+dbg+';display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;flex-shrink:0;opacity:.6">'
+      +'<span style="font-size:18px;color:'+gold+'">&#9670;</span>'
+      +'<span style="font-size:7px;letter-spacing:1.5px;text-transform:uppercase;color:'+dlabel+';font-family:Lato,sans-serif">Photo</span></div>';
+
+  // ── SECTION BUILDER ────────────────────────────────────────────
+  var detailSections=[];
+  var mainGrid='<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:6px;position:relative;z-index:2">';
+  details.forEach(function(item){mainGrid+=stampBox(item[0],item[1]);});
+  mainGrid+='</div>';
+  detailSections.push({title:'Event Details',html:mainGrid});
+
+  var ninongList=getMultiList('ninong');
+  var ninangList=getMultiList('ninang');
+
+  if(currentEvent==='wedding'){
+    // Wedding: Family page (parents only)
+    if(d.groom_parents||d.bride_parents){
+      var familyHtml='';
+      if(d.groom_parents)familyHtml+=field("Groom's Parents",d.groom_parents);
+      if(d.bride_parents)familyHtml+=field("Bride's Parents",d.bride_parents);
+      detailSections.push({title:'Family',html:familyHtml});
+    }
+    // Wedding: Ninong page (separate)
+    if(ninongList.length){
+      var ninongHtml=sponsorField('Ninong — Principal Sponsors',ninongList);
+      detailSections.push({title:'Principal Sponsors — Ninong',html:ninongHtml});
+    }
+    // Wedding: Ninang page (separate)
+    if(ninangList.length){
+      var ninangHtml=sponsorField('Ninang — Principal Sponsors',ninangList);
+      detailSections.push({title:'Principal Sponsors — Ninang',html:ninangHtml});
+    }
+    // Wedding Entourage page 1: Best Man, Maid of Honor, Groomsmen, Bridesmaids
+    var entourage1Html='';
+    if(d.best_man)entourage1Html+=field('Best Man',d.best_man);
+    if(d.maid_of_honor)entourage1Html+=field('Maid of Honor',d.maid_of_honor);
+    var groomsmenList=getMultiList('groomsmen');if(groomsmenList.length)entourage1Html+=sponsorField('Groomsmen',groomsmenList);else if(d.groomsmen)entourage1Html+=field('Groomsmen',d.groomsmen);
+    var bridesmaidsList=getMultiList('bridesmaids');if(bridesmaidsList.length)entourage1Html+=sponsorField('Bridesmaids',bridesmaidsList);else if(d.bridesmaids)entourage1Html+=field('Bridesmaids',d.bridesmaids);
+    if(entourage1Html)detailSections.push({title:'Wedding Entourage',html:entourage1Html});
+    // Wedding Entourage page 2: Cord/Veil/Candle sponsors, Ring bearer, Bible bearer, Flower girls
+    var entourage2Html='';
+    var cordList=getMultiList('cord_sponsors');if(cordList.length)entourage2Html+=sponsorField('Cord Sponsors',cordList);else if(d.cord_sponsors)entourage2Html+=field('Cord Sponsors',d.cord_sponsors);
+    var veilList=getMultiList('veil_sponsors');if(veilList.length)entourage2Html+=sponsorField('Veil Sponsors',veilList);else if(d.veil_sponsors)entourage2Html+=field('Veil Sponsors',d.veil_sponsors);
+    var candleList=getMultiList('candle_sponsors');if(candleList.length)entourage2Html+=sponsorField('Candle Sponsors',candleList);else if(d.candle_sponsors)entourage2Html+=field('Candle Sponsors',d.candle_sponsors);
+    if(d.ring_bearer)entourage2Html+=field('Ring Bearer',d.ring_bearer);
+    if(d.bible_bearer)entourage2Html+=field('Bible Bearer',d.bible_bearer);
+    var flowerList=getMultiList('flower_girls');if(flowerList.length)entourage2Html+=sponsorField('Flower Girls',flowerList);else if(d.flower_girls)entourage2Html+=field('Flower Girls',d.flower_girls);
+    if(entourage2Html)detailSections.push({title:'Secondary Sponsors & Bearers',html:entourage2Html});
+  } else {
+    // Non-wedding family extras
+    var extraParts='';
+    if(d.parents)extraParts+=field('Parents',d.parents);
+    if(d.children)extraParts+=field("Children's Names",d.children);
+    if(extraParts)detailSections.push({title:'Family',html:extraParts});
+    // Ninong — separate page if list has entries (e.g. baptism godparents)
+    if(ninongList.length){
+      detailSections.push({title:'Ninong — Godfather/s',html:sponsorField('Ninong',ninongList)});
+    }
+    // Ninang — separate page if list has entries
+    if(ninangList.length){
+      detailSections.push({title:'Ninang — Godmother/s',html:sponsorField('Ninang',ninangList)});
+    }
+  }
+
+  // Debut: Cotillion, 18 Treasures, 18 Bills — each on its own page
+  if(d.cotillion||d.treasures||d.bills){
+    var cotillionList=getMultiList('cotillion');
+    if(cotillionList.length){
+      detailSections.push({title:'Cotillion de Honor — 18 Roses',html:sponsorField('18 Roses',cotillionList)});
+    } else if(d.cotillion){
+      detailSections.push({title:'Cotillion de Honor — 18 Roses',html:field('Cotillion de Honor — 18 Roses',d.cotillion)});
+    }
+    var treasuresList=getMultiList('treasures');
+    if(treasuresList.length){
+      detailSections.push({title:'18 Treasures & Candles',html:sponsorField('18 Treasures / Candles',treasuresList)});
+    } else if(d.treasures){
+      detailSections.push({title:'18 Treasures & Candles',html:field('18 Treasures / Candles',d.treasures)});
+    }
+    var billsList=getMultiList('bills');
+    if(billsList.length){
+      detailSections.push({title:'18 Bills — Monetary Sponsors',html:sponsorField('18 Bills / Monetary Sponsors',billsList)});
+    } else if(d.bills){
+      detailSections.push({title:'18 Bills — Monetary Sponsors',html:field('18 Bills / Monetary Sponsors',d.bills)});
+    }
+  }
+
+  var miscHtml='';
+  if(currentEvent!=='wedding')if(d.dress_code)miscHtml+=field('Motif / Dress Code',d.dress_code);
+  if(d.attire_note)miscHtml+=field('Attire Note',d.attire_note);
+  if(d.entourage_attire)miscHtml+=field('Entourage Attire',d.entourage_attire);
+  if(d.meal_pref)miscHtml+=field('Meal Preference Options',d.meal_pref);
+  if(d.theme_party)miscHtml+=field('Party Theme',d.theme_party);
+  if(d.program_flow)miscHtml+=field('Program Flow',d.program_flow);
+  if(d.activities)miscHtml+=field('Activities / Program',d.activities);
+  if(d.host&&currentEvent!=='fiesta')miscHtml+=field('Hosted / Organized by',d.host);
+  if(d.potluck)miscHtml+=field('Potluck / What to Bring',d.potluck);
+  if(d.monito_monita)miscHtml+=field('Monito Monita',d.monito_monita);
+  if(d.contribution)miscHtml+=field('Contribution / Entrance Fee',d.contribution);
+  if(d.loot_bag)miscHtml+=field('Loot Bag / Party Favor',d.loot_bag);
+  if(d.entertainers)miscHtml+=field('Kiddie Program / Entertainers',d.entertainers);
+  if(d.parent_note)miscHtml+=field('Parent / Guardian Note',d.parent_note);
+  if(d.priest)miscHtml+=field('Officiated by',d.priest);
+  if(d.nickname)miscHtml+=field("Baby's Called Name",d.nickname);
+  if(d.degree)miscHtml+=field('Degree / Program',d.degree);
+  if(d.latin_honor)miscHtml+=field('Latin Honor / Award',d.latin_honor);
+  if(d.school)miscHtml+=field('School / University',d.school);
+  if(d.batch)miscHtml+=field('Graduation Batch',d.batch);
+  if(d.milestone)miscHtml+=field('Anniversary Milestone',d.milestone);
+  if(d.vows_renewal)miscHtml+=field('Renewal of Vows',d.vows_renewal);
+  if(d.batch_label)miscHtml+=field('Batch / Generation',d.batch_label);
+  if(d.civil_date)miscHtml+=field('Civil Wedding',d.civil_date+(d.civil_venue?' — '+d.civil_venue:''));
+  if(d.honeymoon)miscHtml+=field('Honeymoon',d.honeymoon);
+  if(d.video_link)miscHtml+=field('Video Message / Tribute Link',d.video_link);
+  if(d.hashtag)miscHtml+=field('Wedding Hashtag',d.hashtag);
+  if(d.registry)miscHtml+=field('Registry / Wishlist',d.registry);
+  if(d.mass_time)miscHtml+=field('Mass Schedule',d.mass_time+(d.mass_venue?' — '+d.mass_venue:''));
+  if(d.procession_time||d.procession_route)miscHtml+=field('Procession',(d.procession_time||'')+(d.procession_route?' — '+d.procession_route:''));
+  if(d.hosted_by)miscHtml+=field('Given / Hosted by',d.hosted_by);
+  if(d.parking)miscHtml+=field('Parking / Directions',d.parking);
+  if(miscHtml)detailSections.push({title:'Additional Details',html:miscHtml});
+
+  if(message){
+    var msgHtml='<div style="position:relative;z-index:2;padding:8px 4px;text-align:center">'
+      +'<div style="font-size:26px;color:'+gold+';opacity:.3;line-height:1;font-family:Georgia,serif;margin-bottom:6px">&ldquo;</div>'
+      +'<div style="font-family:IM Fell English,serif;font-style:italic;font-size:13px;color:'+pageText+';line-height:1.85;letter-spacing:.2px">'+message+'</div>'
+      +'<div style="font-size:26px;color:'+gold+';opacity:.3;line-height:1;font-family:Georgia,serif;margin-top:6px">&rdquo;</div>'
+      +'</div>';
+    if(message.length>80)detailSections.push({title:'Message',html:msgHtml});
+    else detailSections[detailSections.length-1].html+=msgHtml;
+  }
+
+  var totalPages=2+detailSections.length+1+1; // +1 for thank you
+  var uid='pp'+Math.random().toString(36).slice(2,7);
+  var qrCanvasId='qr'+uid;
+
+  var script='<script>'
+    +'(function(){'
+    +'var book=document.getElementById("'+uid+'");'
+    +'var pages=book.querySelectorAll(".pp-page");'
+    +'var cur=0,total=pages.length,animating=false;'
+    +'var gold="'+gold+'";'
+    +'function updateDots(){book.querySelectorAll(".pp-dot").forEach(function(d,i){var a=i===cur;d.style.background=a?gold:(cur===0?"rgba(255,255,255,0.3)":"rgba(0,0,0,0.15)");d.style.width=a?"14px":"5px";});}'
+    +'function go(n){'
+    +'if(n<0||n>=total||animating)return;'
+    +'animating=true;'
+    +'var fwd=n>cur,lv=pages[cur],en=pages[n];'
+    +'pages.forEach(function(p,i){if(i!==cur&&i!==n){p.style.transition="none";p.style.transform="translateX("+(i<n?"-110%":"110%")+")";p.style.opacity="0";p.style.zIndex="1";}});'
+    +'lv.style.transition="none";lv.style.transform="translateX(0)";lv.style.opacity="1";lv.style.zIndex="3";'
+    +'en.style.transition="none";en.style.transform="translateX("+(fwd?"100%":"-100%")+")";en.style.opacity="1";en.style.zIndex="4";'
+    +'requestAnimationFrame(function(){requestAnimationFrame(function(){'
+    +'lv.style.transition="transform 0.45s cubic-bezier(0.4,0,0.2,1),opacity 0.35s";'
+    +'lv.style.transform="translateX("+(fwd?"-100%":"100%")+")";lv.style.opacity="0";'
+    +'en.style.transition="transform 0.45s cubic-bezier(0.4,0,0.2,1)";'
+    +'en.style.transform="translateX(0)";en.style.opacity="1";'
+    +'});});'
+    +'setTimeout(function(){lv.style.transition="none";lv.style.transform="translateX("+(fwd?"110%":"-110%")+")";lv.style.zIndex="1";animating=false;},500);'
+    +'cur=n;updateDots();'
+    +'}'
+    +'var tx=0,ty=0,tt=0;'
+    +'book.addEventListener("touchstart",function(e){tx=e.touches[0].clientX;ty=e.touches[0].clientY;tt=Date.now();},{passive:true});'
+    +'book.addEventListener("touchend",function(e){var dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty,dt=Date.now()-tt;if(dt<400&&Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)*1.5){if(dx<0)go(cur+1);else go(cur-1);}},{passive:true});'
+    +'var mx=0,md=false;'
+    +'book.addEventListener("mousedown",function(e){mx=e.clientX;md=true;});'
+    +'book.addEventListener("mouseup",function(e){if(!md)return;md=false;var dx=e.clientX-mx;if(Math.abs(dx)>50){if(dx<0)go(cur+1);else go(cur-1);}});'
+    +'book.addEventListener("mouseleave",function(){md=false;});'
+    +'book.ppNext=function(){go(cur+1);};'
+    +'book.ppPrev=function(){go(cur-1);};'
+    +'updateDots();'
+    +'function ppGenQR(){'
+    +'var c=document.getElementById("'+qrCanvasId+'");'
+    +'if(!c)return;'
+    +'var url='+JSON.stringify(attendMailto)+';'
+    +'if(typeof QRCode!=="undefined"){try{QRCode.toCanvas(c,url,{width:80,margin:1,color:{dark:"'+coverBgSolid+'",light:"'+pageBg+'"}},function(){});}catch(e){}}'
+    +'else{var s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js";s.onload=function(){try{QRCode.toCanvas(c,url,{width:80,margin:1},function(){});}catch(e){}};document.head.appendChild(s);}'
+    +'}'
+    +'setTimeout(ppGenQR,300);'
+    +'})();'
+    +'function ppNext(btn){btn.closest(".pp-book").ppNext();}'
+    +'function ppPrev(btn){btn.closest(".pp-book").ppPrev();}'
+    +'<\/script>';
+
+
+
+
+  // ── RSVP PAGE builds above, THANK YOU PAGE ─────────────────────
+  var tyPage=totalPages-1;
+
+  var docHead=forDownload
+    ?'<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>'
+      +'<title>Invitation — '+mainTitle+'</title>'
+      +'<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime&family=IM+Fell+English:ital@0;1&family=Cinzel:wght@400;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>'
+      +'<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"><\/script>'
+      +'<style>*{box-sizing:border-box;margin:0;padding:0}'
+      +'body{font-family:Lato,sans-serif;background:'+pageBg+';min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 16px;gap:8px}'
+      +'.pp-viewport{position:relative;width:320px;height:460px;flex-shrink:0;filter:drop-shadow(0 12px 40px rgba(0,0,0,0.45)) drop-shadow(0 4px 12px rgba(0,0,0,0.3))}'
+      +'</style>'
+      +'</head><body>'
+      +'<div style="font-family:Arial,sans-serif;font-size:9px;letter-spacing:3px;color:rgba(0,0,0,0.35);text-transform:uppercase;margin-bottom:4px">Your Personal Passport Invitation</div>'
+      +'<div class="pp-viewport">'
+    :'';
+  var docFoot=forDownload
+    ?'</div>'  // close pp-viewport
+     +'<div style="font-family:Arial,sans-serif;font-size:9px;letter-spacing:2px;color:rgba(0,0,0,0.3);text-transform:uppercase;margin-top:10px">&#8592; Swipe to navigate &nbsp; &#8594;</div>'
+     +'</body></html>'
+    :'';
+
+  var html=docHead;
+
+  // Book wrapper — data-gold used by generator's initPassportBook
+  html+='<div id="'+uid+'" class="pp-book" data-gold="'+gold+'" style="width:100%;height:100%;position:absolute;top:0;left:0;right:0;bottom:0;user-select:none;font-family:Lato,sans-serif">';
+  // Shadow layers
+  html+='<div style="position:absolute;bottom:-8px;left:6px;right:-6px;top:6px;background:rgba(0,0,0,0.18);border-radius:8px;z-index:0"></div>';
+  html+='<div style="position:absolute;bottom:-4px;left:3px;right:-3px;top:3px;background:rgba(0,0,0,0.12);border-radius:9px;z-index:0"></div>';
+  // Book frame
+  html+='<div style="position:absolute;top:0;left:0;right:0;bottom:0;z-index:1;border-radius:3px 8px 8px 3px;overflow:hidden;box-shadow:2px 0 8px rgba(0,0,0,0.55),6px 5px 0 rgba(0,0,0,0.28)">';
+  // Page container
+  html+='<div style="position:relative;width:100%;height:100%;isolation:isolate">';
+
+  // ══ COVER ═══════════════════════════════════════════════════════
+  html+='<div class="pp-page" style="'+pageStyle+'transform:translateX(0);opacity:1;z-index:2;background:'+coverBg+'">';
+  html+='<div style="position:absolute;top:0;left:0;right:0;bottom:0;background:'+coverPattern+';pointer-events:none;z-index:1"></div>';
+  html+=spine+spineR+cornerOrnaments;
+  html+='<div style="position:absolute;top:8px;left:8px;right:8px;bottom:8px;border:1px solid '+gold+';opacity:.28;pointer-events:none;z-index:2"></div>';
+  html+='<div style="position:absolute;top:13px;left:13px;right:13px;bottom:13px;border:1px solid '+gold+';opacity:.1;pointer-events:none;z-index:2"></div>';
+  html+='<div style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:20px 18px 0;text-align:center;z-index:3">';
+  html+=emblem;
+  html+='<div style="font-size:8px;letter-spacing:3px;color:#d4aa50;text-transform:uppercase;opacity:.8;margin-bottom:6px;font-family:Arial,sans-serif;overflow:hidden;text-overflow:ellipsis">'+cfg.republic+'</div>';
+  html+='<style>@keyframes ppShimmer{0%{background-position:200% center}100%{background-position:-200% center}}.pp-shine{background:linear-gradient(90deg,#a07820 0%,#f0c040 25%,#fff8c0 50%,#f0c040 75%,#a07820 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:ppShimmer 2.5s linear infinite;display:inline-block}</style>';
+  html+='<div style="font-family:Georgia,serif;font-size:38px;font-weight:bold;letter-spacing:8px;text-transform:uppercase;line-height:1;margin-bottom:6px;text-align:center"><span class="pp-shine">PASSPORT</span></div>';
+  html+='<div style="font-family:Georgia,serif;font-style:italic;font-size:12px;color:#d4aa50;opacity:.7;letter-spacing:1px;margin-bottom:16px">to a Special Celebration</div>';
+  html+='<div style="display:flex;align-items:center;gap:6px;max-width:140px;margin:0 auto">';
+  html+='<div style="flex:1;height:1px;background:#d4aa50;opacity:.4"></div>';
+  html+='<div style="color:#d4aa50;font-size:8px;opacity:.6;letter-spacing:3px">&#10022;&#10022;&#10022;</div>';
+  html+='<div style="flex:1;height:1px;background:#d4aa50;opacity:.4"></div>';
+  html+='</div>';
+  html+='<div style="flex:1;min-height:12px"></div>';
+  html+='<div style="margin-bottom:18px">';
+  html+='<div style="font-size:7px;letter-spacing:3px;color:#d4aa50;text-transform:uppercase;opacity:.75;margin-bottom:6px;font-family:Arial,sans-serif;overflow:hidden;text-overflow:ellipsis">'+cfg.eyebrow+'</div>';
+  html+='<div style="font-family:Georgia,serif;font-size:26px;font-weight:bold;color:#d4aa50;letter-spacing:1px;line-height:1.2;margin-bottom:4px;text-shadow:0 1px 6px rgba(0,0,0,0.6)">'+mainTitle+'</div>';
+  html+=(subTitle?'<div style="font-size:8px;color:#d4aa50;opacity:.7;letter-spacing:2px;text-transform:uppercase;font-family:Arial,sans-serif;margin-bottom:6px">'+subTitle+'</div>':'');
+  // Guest name on cover - personalized per invitee
+  if(displayGuest&&displayGuest!=='Honoured Guest'){
+    html+='<div style="display:flex;align-items:center;gap:6px;margin:4px auto 0;max-width:200px">';
+    html+='<div style="flex:1;height:1px;background:#d4aa50;opacity:.25"></div>';
+    html+='<div style="font-size:7px;color:#d4aa50;opacity:.5;letter-spacing:2px;font-family:Arial,sans-serif;text-transform:uppercase;white-space:nowrap">Issued to</div>';
+    html+='<div style="flex:1;height:1px;background:#d4aa50;opacity:.25"></div>';
+    html+='</div>';
+    html+='<div style="font-family:Georgia,serif;font-size:14px;color:#d4aa50;letter-spacing:2px;font-weight:bold;margin-top:3px;text-shadow:0 1px 4px rgba(0,0,0,0.5)">'+displayGuest.toUpperCase()+'</div>';
+  }
+  html+='</div>'; // close bottom section
+  // Animated swipe hint — shown on cover, fades after first swipe
+  html+='<div id="swipe-hint-'+uid+'" style="position:absolute;bottom:40px;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:6px;z-index:10;pointer-events:none;animation:swipeHintFade 3s ease-in-out 1.5s forwards;opacity:0">'
+    +'<style>@keyframes swipeHintFade{0%{opacity:0}20%{opacity:1}80%{opacity:1}100%{opacity:0}}</style>'
+    +'<div style="font-size:9px;letter-spacing:2px;color:'+gold+';opacity:.7;font-family:Arial,sans-serif;text-transform:uppercase">swipe</div>'
+    +'<div style="font-size:14px;color:'+gold+';opacity:.8;animation:swipeArrow 1s ease-in-out 1.5s infinite alternate">&#8594;</div>'
+    +'<style>@keyframes swipeArrow{from{transform:translateX(-3px)}to{transform:translateX(3px)}}</style>'
+    +'</div>';
+  html+='</div>'; // close flex content container
+  html+=nav(0,totalPages,true);
+  html+='</div>'; // close pp-page cover
+
+  // ══ BIO PAGE ════════════════════════════════════════════════════
+  // ══ BIO PAGE (Passport ID Page) ═══════════════════════════════
+  html+='<div class="pp-page" style="'+pageStyle+'transform:translateX(100%);opacity:0;z-index:1;background:'+pageBg+'">';
+  html+='<div style="position:absolute;top:0;left:0;right:0;bottom:0;background:'+secPattern+';pointer-events:none;z-index:0"></div>';
+  html+=spine+watermark+pageCorners;
+  html+='<div style="position:absolute;top:0;left:0;right:0;height:32px;background:'+coverBgSolid+';display:flex;align-items:center;justify-content:space-between;padding:0 14px;z-index:3">';
+  html+='<span style="font-family:Georgia,serif;font-size:8px;letter-spacing:3px;text-transform:uppercase;color:'+gold+';opacity:.9">'+cfg.republic+'</span>';
+  html+='<span style="font-family:Georgia,serif;font-size:8px;letter-spacing:2px;color:'+gold+';opacity:.6">INVITATION PASSPORT</span>';
+  html+='</div>';
+  html+='<div style="position:absolute;top:32px;left:0;right:0;bottom:34px;z-index:2;display:flex;flex-direction:column;overflow-y:auto">';
+  html+='<div style="display:flex;gap:0;flex-shrink:0">';
+  html+='<div style="width:90px;min-width:90px;background:'+coverBgSolid+';display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 8px;gap:6px;border-right:2px solid '+gold+';border-right-opacity:.3">';
+  html+=photoBox;
+  html+='<div style="font-size:6px;letter-spacing:1.5px;text-transform:uppercase;color:'+gold+';font-family:Arial,sans-serif;opacity:.7;text-align:center">BEARER</div>';
+  html+='<div style="position:absolute;top:38px;left:4px;width:48px;height:48px;border:1.5px solid '+ds.stampColor+';border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;transform:rotate(-20deg);opacity:.7;z-index:4">';
+  html+='<div style="position:absolute;top:3px;left:3px;right:3px;bottom:3px;border:1px dashed '+ds.stampColor+';border-radius:50%;opacity:.4"></div>';
+  html+='<span style="font-size:5px;color:'+ds.stampColor+';text-transform:uppercase;font-weight:700;font-family:Arial,sans-serif;letter-spacing:.5px">ADMIT</span>';
+  html+='<span style="font-size:5px;color:'+ds.stampColor+';font-family:Arial,sans-serif">ONE</span>';
+  html+='</div>';
+  html+='</div>';
+  html+='<div style="flex:1;padding:8px 10px 6px;display:flex;flex-direction:column;gap:0;min-width:0">';
+  html+='<div style="margin-bottom:8px">';
+  html+='<div style="font-size:6.5px;letter-spacing:2px;text-transform:uppercase;color:'+dlabel+';font-family:Arial,sans-serif;margin-bottom:2px">BEARER / INVITEE</div>';
+  html+='<div style="font-family:Georgia,serif;font-size:15px;font-weight:bold;color:'+pageText+';letter-spacing:.5px;border-bottom:1.5px solid '+gold+';padding-bottom:3px;line-height:1.2">'+displayGuest.toUpperCase()+'</div>';
+  html+='</div>';
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px 8px">';
+  html+=field('Issued for',eventLabel);
+  html+=field('Event type',cfg.republic.split(' ').slice(-1)[0]||'Celebration');
+  html+=field('Valid until',d.rsvp_deadline||d.date||'See details');
+  html+=field('Nationality','Guest of Honor');
+  html+='</div>';
+  html+='</div>';
+  html+='</div>';
+  html+='<div style="margin:0 14px;height:1px;background:linear-gradient(90deg,transparent,'+gold+'88,'+gold+'88,transparent);flex-shrink:0"></div>';
+  html+='<div style="padding:6px 14px;display:flex;gap:12px;align-items:center;flex-shrink:0;background:'+dbg+'">';
+  html+='<div style="flex:1">';
+  html+='<div style="font-size:6px;letter-spacing:2px;text-transform:uppercase;color:'+dlabel+';font-family:Arial,sans-serif;margin-bottom:2px">EVENT</div>';
+  html+='<div style="font-family:Georgia,serif;font-size:12px;font-weight:bold;color:'+pageText+'">'+mainTitle+'</div>';
+  html+='</div>';
+  html+='<div style="text-align:right">';
+  html+='<div style="font-size:6px;letter-spacing:2px;text-transform:uppercase;color:'+dlabel+';font-family:Arial,sans-serif;margin-bottom:2px">DATE</div>';
+  html+='<div style="font-family:Georgia,serif;font-size:11px;color:'+pageText+'">'+(d.ceremony_date||d.date||'—')+'</div>';
+  html+='</div>';
+  html+='</div>';
+  html+='<div style="background:'+ds.mrzBg+';border-top:2px solid '+gold+'33;padding:6px 10px;flex-shrink:0">';
+  html+='<div style="font-size:6px;letter-spacing:3px;color:'+(isDark?gold:'#bbb')+';text-transform:uppercase;margin-bottom:3px;font-family:Arial,sans-serif">MACHINE READABLE ZONE</div>';
+  html+='<div style="font-family:Courier New,monospace;font-size:8px;color:'+(isDark?gold:'#888')+';letter-spacing:2px;line-height:1.9;word-break:break-all">'+mrzLine1+'</div>';
+  html+='<div style="font-family:Courier New,monospace;font-size:8px;color:'+(isDark?gold:'#888')+';letter-spacing:2px;line-height:1.9;word-break:break-all">'+mrzLine2+'</div>';
+  html+='</div>';
+  html+='</div>';
+  html+=nav(1,totalPages,false);
+  html+='</div>';
+  // ══ DETAIL PAGES ════════════════════════════════════════════════
+  // ══ DETAIL PAGES ════════════════════════════════════════════════
+  detailSections.forEach(function(sec,idx){
+    var pageNum=2+idx;
+    html+='<div class="pp-page" style="'+pageStyle+'transform:translateX(100%);opacity:0;z-index:1;background:'+pageBg+'">';
+    html+='<div style="position:absolute;top:0;left:0;right:0;bottom:0;background:'+secPattern+';pointer-events:none;z-index:0"></div>';
+    html+=spine+watermark+pageCorners;
+    html+='<div style="position:absolute;top:0;left:0;right:0;height:32px;background:'+coverBgSolid+';display:flex;align-items:center;justify-content:space-between;padding:0 14px;z-index:3">';
+    html+='<span style="font-family:Georgia,serif;font-size:7px;letter-spacing:3px;text-transform:uppercase;color:'+gold+';opacity:.9">'+sec.title+'</span>';
+    html+='<span style="font-family:Georgia,serif;font-size:9px;color:'+gold+';opacity:.5">'+((pageNum+1)<10?'0'+(pageNum+1):(pageNum+1))+'</span>';
+    html+='</div>';
+    html+='<div style="position:absolute;top:32px;left:0;right:0;bottom:34px;padding:10px 13px 8px;overflow-y:auto;z-index:2">';
+    html+=sec.html;
+    html+='</div>';
+    html+=nav(pageNum,totalPages,false);
+    html+='</div>';
+  });
+
+  // ══ RSVP PAGE ══════════════════════════════════════════════════
+  // ══ RSVP PAGE ══════════════════════════════════════════════════
+  var rsvpPage=totalPages-1;
+  html+='<div class="pp-page" style="'+pageStyle+'transform:translateX(100%);opacity:0;z-index:1;background:'+pageBg+'">';
+  html+='<div style="position:absolute;top:0;left:0;right:0;bottom:0;background:'+secPattern+';pointer-events:none;z-index:0"></div>';
+  html+=spine+watermark+pageCorners;
+  html+='<div style="position:absolute;top:0;left:0;right:0;height:32px;background:'+coverBgSolid+';display:flex;align-items:center;justify-content:space-between;padding:0 14px;z-index:3">';
+  html+='<span style="font-family:Georgia,serif;font-size:7px;letter-spacing:3px;text-transform:uppercase;color:'+gold+';opacity:.9">Entry Visa &amp; RSVP</span>';
+  html+='<span style="font-family:Georgia,serif;font-size:9px;color:'+gold+';opacity:.5">0'+(rsvpPage+1)+'</span>';
+  html+='</div>';
+  html+='<div style="position:absolute;top:32px;left:0;right:0;bottom:34px;padding:10px 12px 8px;z-index:2;display:flex;flex-direction:column;gap:7px;overflow-y:auto">';
+  html+='<div style="position:relative;border:2px solid '+ds.stampColor+';border-radius:6px;padding:10px 12px 8px;text-align:center;flex-shrink:0">';
+  html+='<div style="position:absolute;top:3px;left:3px;right:3px;bottom:3px;border:1px dashed '+ds.stampColor+';border-radius:4px;opacity:.4"></div>';
+  html+='<div style="position:absolute;top:-7px;left:50%;transform:translateX(-50%);background:'+pageBg+';padding:0 6px;font-size:6px;letter-spacing:2px;color:'+ds.stampColor+';font-family:Arial,sans-serif;text-transform:uppercase">Entry Permit</div>';
+  html+='<div style="font-family:Georgia,serif;font-size:12px;color:'+pageText+';font-weight:bold;margin-bottom:3px;position:relative">'+mainTitle+'</div>';
+  if(rsvpContact)html+='<div style="font-size:10px;color:'+pageText+';font-family:Arial,sans-serif;font-weight:700;position:relative">'+rsvpContact+'</div>';
+  if(rsvpDeadline)html+='<div style="font-size:8px;color:'+dlabel+';font-family:Arial,sans-serif;margin-top:2px;position:relative">Please reply by '+rsvpDeadline+'</div>';
+  html+='</div>';
+  html+='<div style="background:'+dbg+';border-radius:5px;padding:8px 10px;flex-shrink:0">';
+  html+='<div style="font-size:6.5px;letter-spacing:2px;text-transform:uppercase;color:'+dlabel+';font-family:Arial,sans-serif;margin-bottom:6px">How to confirm your attendance</div>';
+  html+='<div style="display:flex;flex-direction:column;gap:5px">';
+  html+='<div style="display:flex;align-items:flex-start;gap:7px">';
+  html+='<div style="min-width:16px;height:16px;border-radius:50%;background:'+coverBgSolid+';color:'+gold+';font-size:7px;display:flex;align-items:center;justify-content:center;font-weight:bold">1</div>';
+  html+='<div style="font-size:8px;color:'+pageText+';font-family:Arial,sans-serif;line-height:1.5">Click <b>I Will Attend</b> or <b>I Cannot Attend</b> below</div>';
+  html+='</div>';
+  html+='<div style="display:flex;align-items:flex-start;gap:7px">';
+  html+='<div style="min-width:16px;height:16px;border-radius:50%;background:'+coverBgSolid+';color:'+gold+';font-size:7px;display:flex;align-items:center;justify-content:center;font-weight:bold">2</div>';
+  html+='<div style="font-size:8px;color:'+pageText+';font-family:Arial,sans-serif;line-height:1.5">Your email app opens with a pre-filled message — just tap <b>Send</b></div>';
+  html+='</div>';
+  html+='<div style="display:flex;align-items:flex-start;gap:7px">';
+  html+='<div style="min-width:16px;height:16px;border-radius:50%;background:'+coverBgSolid+';color:'+gold+';font-size:7px;display:flex;align-items:center;justify-content:center;font-weight:bold">3</div>';
+  html+='<div style="font-size:8px;color:'+pageText+';font-family:Arial,sans-serif;line-height:1.5">The host receives your reply and will confirm your seat</div>';
+  html+='</div>';
+  html+='</div>';
+  html+='</div>';
+  html+='<div style="display:flex;gap:8px;flex-shrink:0">';
+  html+='<a href="'+attendMailto+'" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-decoration:none;background:'+coverBgSolid+';border-radius:8px;padding:10px 6px;gap:3px;position:relative;overflow:hidden">';
+  html+='<div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,'+gold+',transparent)"></div>';
+  html+='<div style="font-size:22px;color:'+gold+'">&#10003;</div>';
+  html+='<div style="font-family:Georgia,serif;font-size:9px;color:'+gold+';letter-spacing:1px;font-weight:bold;text-align:center;line-height:1.3">I Will<br>Attend</div>';
+  html+='</a>';
+  html+='<a href="'+declineMailto+'" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-decoration:none;background:rgba(0,0,0,0.04);border:1.5px solid rgba(0,0,0,0.1);border-radius:8px;padding:10px 6px;gap:3px">';
+  html+='<div style="font-size:22px;color:#bbb">&#10007;</div>';
+  html+='<div style="font-family:Georgia,serif;font-size:9px;color:#999;letter-spacing:1px;text-align:center;line-height:1.3">I Cannot<br>Attend</div>';
+  html+='</a>';
+  html+='</div>';
+  html+='</div>';
+  // ── ATTENDING confirmation stamp (hidden by default, shown by auto-RSVP handler) ──
+  html+='<div id="pp-rsvp-stamp" style="display:none;position:absolute;bottom:38px;right:10px;pointer-events:none;z-index:10;transform:rotate(-18deg);opacity:0.82">';
+  html+='<div style="border:2.5px solid rgba(190,40,40,0.65);border-radius:5px;padding:5px 12px;text-align:center;background:rgba(255,240,240,0.18);backdrop-filter:blur(1px)">';
+  html+='<div style="font-family:Georgia,serif;font-size:14px;font-weight:bold;color:rgba(190,40,40,0.8);letter-spacing:3px;text-transform:uppercase;line-height:1">ATTENDING</div>';
+  html+='<div style="width:100%;height:1.5px;background:rgba(190,40,40,0.45);margin:3px 0"></div>';
+  html+='<div id="pp-stamp-date" style="font-family:Arial,sans-serif;font-size:7px;color:rgba(190,40,40,0.7);letter-spacing:1.5px;text-transform:uppercase"></div>';
+  html+='</div>';
+  html+='</div>';
+  html+=nav(rsvpPage,totalPages,false);
+  html+='</div>';
+  // ══ THANK YOU PAGE ══════════════════════════════════════════════
+  html+='<div class="pp-page" style="'+pageStyle+'transform:translateX(100%);opacity:0;z-index:1;background:'+coverBg+'">';
+  html+='<div style="position:absolute;top:0;left:0;right:0;bottom:0;background:'+coverPattern+';pointer-events:none;z-index:1"></div>';
+  html+=spine+spineR+cornerOrnaments;
+  html+='<div style="position:absolute;top:8px;left:8px;right:8px;bottom:8px;border:1px solid '+gold+';opacity:.28;pointer-events:none;z-index:2"></div>';
+  html+='<div style="position:absolute;top:13px;left:13px;right:13px;bottom:13px;border:1px solid '+gold+';opacity:.1;pointer-events:none;z-index:2"></div>';
+  html+='<div style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px;z-index:3">';
+  html+='<div style="margin-bottom:12px">'+makeBadge(gold,coverBgSolid)+'</div>';
+  html+='<div style="font-family:'+headFont+';font-size:8px;letter-spacing:5px;color:'+gold+';text-transform:uppercase;opacity:.7;margin-bottom:10px">With love &amp; gratitude</div>';
+  html+='<div style="font-family:IM Fell English,serif;font-size:22px;color:#fff;font-weight:700;line-height:1.3;margin-bottom:12px">Thank You!</div>';
+  html+='<div style="display:flex;align-items:center;gap:6px;max-width:140px;margin:0 auto 16px">';
+  html+='<div style="flex:1;height:1px;background:'+gold+';opacity:.3"></div>';
+  html+='<div style="color:'+gold+';font-size:7px;opacity:.5;letter-spacing:3px">&#10022;&#10022;&#10022;</div>';
+  html+='<div style="flex:1;height:1px;background:'+gold+';opacity:.3"></div>';
+  html+='</div>';
+  html+='<div style="font-family:IM Fell English,serif;font-style:italic;font-size:12px;color:#fff;opacity:.6;line-height:1.7;max-width:240px">Your presence would mean the world to us.</div>';
+  html+='<div style="margin-top:18px;font-family:Georgia,serif;font-size:9px;letter-spacing:3px;color:#d4aa50;opacity:.8;text-transform:uppercase">'+mainTitle+'</div>';
+  html+='<div style="font-family:Lato,sans-serif;font-size:10px;color:#fff;opacity:.4;margin-top:4px;letter-spacing:1px">'+eventLabel+'</div>';
+  html+='</div>'; // close thank you page inner
+  html+=nav(tyPage,totalPages,true);
+  html+='</div>'; // close thank you page
+
+  // Close book: page-container + book-frame + pp-book
+  html+='</div></div></div>';
+  if(forDownload) html+=script;
+  html+=docFoot;
+  return html;
+}
+
+function buildEmailBody(guestName){
+  var cfg=EVENTS[currentEvent],ds=DESIGNS[currentDesign],d=getEventData();
+  var mainTitle=getMainTitle(),subTitle=getSubTitle(),eventLabel=cfg.label;
+  var displayGuest=guestName||'Honoured Guest';
+  var hostEmail=d.host_email||'';
+  var rsvpName=d.rsvp_name||'',rsvpContact=d.rsvp_contact||'';
+  var rsvpDeadline=d.rsvp_deadline||'',message=d.message||'';
+  var siteUrlVal=gv('site-url').replace(/\/+$/,'');
+  var guestKey=encodeURIComponent(displayGuest);
+  var inviteLink=siteUrlVal ? siteUrlVal+'?g='+guestKey : '';
+  var attendLink=siteUrlVal ? siteUrlVal+'?rsvp=attend&g='+guestKey : 'mailto:'+hostEmail;
+  var declineLink=siteUrlVal ? siteUrlVal+'?rsvp=decline&g='+guestKey : 'mailto:'+hostEmail;
+  var gold=ds.gold, coverBg=ds.coverBgSolid;
+  var date=d.date||d.ceremony_date||'', time=d.time||d.ceremony_time||'';
+  var venue=d.venue||d.ceremony_venue||d.graduation_venue||'';
+  var address=d.address||d.ceremony_address||'';
+
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>'
+    +'<body style="margin:0;padding:0;background:#c8c0b4;font-family:Arial,sans-serif">'
+    +'<table width="100%" cellpadding="0" cellspacing="0" style="background:#c8c0b4;padding:24px 12px"><tr><td align="center">'
+    +'<table width="520" cellpadding="0" cellspacing="0" style="max-width:520px">'
+
+    // ── Dear greeting ──
+    +'<tr><td style="background:#fff;border-radius:8px 8px 0 0;padding:20px 24px 16px;border-left:4px solid '+gold+'">'
+    +'<div style="font-family:Georgia,serif;font-size:16px;color:#3d1c1c;margin-bottom:6px">Dear <strong>'+displayGuest+'</strong>,</div>'
+    +'<div style="font-size:13px;color:#666;line-height:1.6">You have received a personalized passport invitation to <strong>'+mainTitle+'</strong>.'+(message?'<br><em style="color:#888">'+message+'</em>':'')+'</div>'
+    +'</td></tr>'
+
+    // ── Passport cover strip ──
+    +'<tr><td style="background:'+coverBg+';padding:24px;text-align:center">'
+    +'<div style="font-family:Arial,sans-serif;font-size:9px;letter-spacing:4px;color:'+gold+';text-transform:uppercase;opacity:.7;margin-bottom:4px">Republic of Celebrations</div>'
+    +'<div style="font-family:Georgia,serif;font-size:36px;font-weight:bold;color:'+gold+';letter-spacing:6px">PASSPORT</div>'
+    +'<div style="font-family:Georgia,serif;font-style:italic;font-size:11px;color:'+gold+';opacity:.6;margin-bottom:14px">to a Special Celebration</div>'
+    +'<div style="font-family:Arial,sans-serif;font-size:9px;letter-spacing:3px;color:'+gold+';opacity:.6;text-transform:uppercase;margin-bottom:4px">'+cfg.eyebrow+'</div>'
+    +'<div style="font-family:Georgia,serif;font-size:26px;color:#fff;font-weight:bold;margin-bottom:8px">'+mainTitle+'</div>'
+    +(subTitle?'<div style="font-size:10px;color:#fff;opacity:.5;letter-spacing:1px">'+subTitle+'</div>':'')
+    +'<div style="margin-top:14px;border-top:1px solid rgba(255,255,255,0.15);padding-top:12px">'
+    +'<div style="font-family:Arial,sans-serif;font-size:8px;letter-spacing:3px;color:'+gold+';opacity:.6;text-transform:uppercase;margin-bottom:4px">Issued to</div>'
+    +'<div style="font-family:Georgia,serif;font-size:18px;color:'+gold+';font-weight:bold;letter-spacing:2px">'+displayGuest.toUpperCase()+'</div>'
+    +'</div>'
+    +'</td></tr>'
+
+    // ── Event details ──
+    +'<tr><td style="background:#fff;padding:20px 24px">'
+    +(date?'<div style="display:flex;gap:8px;margin-bottom:10px"><span style="font-size:11px;color:#999;min-width:70px">Date</span><span style="font-size:12px;font-weight:bold;color:#3d1c1c">'+date+(time?' &nbsp;·&nbsp; '+time:'')+'</span></div>':'')
+    +(venue?'<div style="display:flex;gap:8px;margin-bottom:10px"><span style="font-size:11px;color:#999;min-width:70px">Venue</span><span style="font-size:12px;font-weight:bold;color:#3d1c1c">'+venue+(address?'<br><span style="font-weight:normal;color:#666">'+address+'</span>':'')+'</span></div>':'')
+    +(d.dress_code?'<div style="display:flex;gap:8px;margin-bottom:10px"><span style="font-size:11px;color:#999;min-width:70px">Attire</span><span style="font-size:12px;color:#3d1c1c">'+d.dress_code+'</span></div>':'')
+    +(rsvpDeadline?'<div style="display:flex;gap:8px;margin-bottom:10px"><span style="font-size:11px;color:#999;min-width:70px">RSVP by</span><span style="font-size:12px;color:#c0392b;font-weight:bold">'+rsvpDeadline+'</span></div>':'')
+    +'</td></tr>'
+
+    // ── View Invitation button ──
+    +(inviteLink?
+      '<tr><td style="background:#fff;padding:0 24px 20px;text-align:center">'
+      +'<a href="'+inviteLink+'" style="display:inline-block;background:'+coverBg+';color:'+gold+';font-family:Georgia,serif;font-size:14px;font-weight:bold;letter-spacing:2px;padding:14px 32px;border-radius:6px;text-decoration:none;border:2px solid '+gold+'">&#128218; View Your Passport Invitation</a>'
+      +'</td></tr>'
+    :'')
+
+    // ── RSVP buttons ──
+    +'<tr><td style="background:#f8f5f0;padding:12px 24px;border-radius:0 0 8px 8px;text-align:center">'
+    +'<div style="font-size:11px;color:#aaa;letter-spacing:1px">Open your passport invitation to confirm attendance</div>'
+    +(rsvpName||rsvpContact?'<div style="margin-top:6px;font-size:11px;color:#bbb">Questions? Contact '+rsvpName+(rsvpContact?' · '+rsvpContact:'')+'</div>':'')
+    +'</td></tr>'
+
+    +'</table></td></tr></table>'
+    +'</body></html>';
+}
+
+
+function testEJS(){
+  var pk=document.getElementById('ejs-pubkey').value.trim();
+  var svc=document.getElementById('ejs-service').value.trim();
+  var tpl=document.getElementById('ejs-template').value.trim();
+  var st=document.getElementById('ejs-test-status');
+  if(!pk||!svc||!tpl){st.className='status-msg error';st.textContent='Please fill in all three fields.';return;}
+  if(!tpl.startsWith('template_')){st.className='status-msg error';st.textContent='Template ID must start with "template_" — e.g. template_s7h01xs';return;}
+  if(!svc.startsWith('service_')){st.className='status-msg error';st.textContent='Service ID must start with "service_" — find it at emailjs.com/admin under Email Services';return;}
+  st.className='status-msg sending';st.textContent='Testing... sending a test email to '+( gv('host-email')||'your email' );
+  try{
+    emailjs.init({publicKey:pk});
+    emailjs.send(svc,tpl,{to_name:'Test',to_email:gv('host-email')||'test@test.com',subject:'EmailJS Test',from_name:'Generator',from_email:gv('host-email')||'test@test.com',message:'<p>This is a test from PH Passport Generator.</p>',reply_to:''})
+    .then(function(){
+      st.className='status-msg success';
+      st.textContent='✓ All credentials valid! Test email sent to '+( gv('host-email')||'test@test.com' );
+    },function(err){
+      var raw=err.text||JSON.stringify(err);
+      var msg='';
+      if(raw.toLowerCase().includes('template')){
+        msg='Template ID not found. → Open emailjs.com/admin/templates, click your template, copy the ID from the URL bar (starts with template_)';
+      } else if(raw.toLowerCase().includes('service')){
+        msg='Service ID not found. → Go to emailjs.com/admin → Email Services → copy your Service ID (starts with service_)';
+      } else if(raw.toLowerCase().includes('key')||raw.toLowerCase().includes('auth')){
+        msg='Public Key invalid. → Go to emailjs.com → Account → General → copy your Public Key';
+      } else if(raw.toLowerCase().includes('quota')||raw.toLowerCase().includes('limit')){
+        msg='Monthly limit reached (200 free emails). → Upgrade at emailjs.com/pricing';
+      } else {
+        msg=raw;
+      }
+      st.className='status-msg error';
+      st.innerHTML='<strong>Failed:</strong> '+msg+'<br><small style="opacity:.6;font-size:10px">Raw: '+raw+'</small>';
+    });
+  }catch(e){st.className='status-msg error';st.textContent='Error: '+e.message;}
+}
+
+function initPassportBook(book){
+  if(!book||book._ppInit)return;
+  book._ppInit=true;
+  var pages=book.querySelectorAll('.pp-page');
+  var cur=0;
+  var total=pages.length;
+  var gold=book.getAttribute('data-gold')||'#c8aa50';
+  var animating=false;
+
+  function updateDots(){
+    book.querySelectorAll('.pp-dot').forEach(function(dot,i){
+      var a=i===cur;
+      dot.style.background=a?gold:(cur===0?'rgba(255,255,255,0.3)':'rgba(0,0,0,0.15)');
+      dot.style.width=a?'14px':'5px';
+    });
+  }
+
+  function go(n){
+    if(n<0||n>=total||animating)return;
+    animating=true;
+    var forward=n>cur;
+    var lv=pages[cur],en=pages[n];
+
+    if(forward){
+      // Reset without transition
+      lv.style.transition='none';
+      lv.style.transform='translateX(0)';
+      lv.style.opacity='1';
+      lv.style.zIndex='3';
+      en.style.transition='none';
+      en.style.transform='perspective(900px) rotateY(25deg) translateX(8%)';
+      en.style.opacity='0';
+      en.style.zIndex='4';
+      requestAnimationFrame(function(){requestAnimationFrame(function(){
+        // Current page slides+folds left
+        lv.style.transition='transform 0.5s cubic-bezier(0.4,0,0.2,1),opacity 0.45s';
+        lv.style.transform='perspective(900px) rotateY(-25deg) translateX(-8%)';
+        lv.style.opacity='0';
+        // New page unfolds from right
+        setTimeout(function(){
+          en.style.transition='transform 0.5s cubic-bezier(0.4,0,0.2,1),opacity 0.4s';
+          en.style.transform='perspective(900px) rotateY(0deg) translateX(0)';
+          en.style.opacity='1';
+        },80);
+      });});
+    } else {
+      lv.style.transition='none';
+      lv.style.transform='translateX(0)';
+      lv.style.opacity='1';
+      lv.style.zIndex='3';
+      en.style.transition='none';
+      en.style.transform='perspective(900px) rotateY(-25deg) translateX(-8%)';
+      en.style.opacity='0';
+      en.style.zIndex='4';
+      requestAnimationFrame(function(){requestAnimationFrame(function(){
+        lv.style.transition='transform 0.5s cubic-bezier(0.4,0,0.2,1),opacity 0.45s';
+        lv.style.transform='perspective(900px) rotateY(25deg) translateX(8%)';
+        lv.style.opacity='0';
+        setTimeout(function(){
+          en.style.transition='transform 0.5s cubic-bezier(0.4,0,0.2,1),opacity 0.4s';
+          en.style.transform='perspective(900px) rotateY(0deg) translateX(0)';
+          en.style.opacity='1';
+        },80);
+      });});
+    }
+
+    setTimeout(function(){
+      lv.style.transition='none';
+      lv.style.transform='translateX(110%)';
+      lv.style.opacity='0';
+      lv.style.zIndex='1';
+      animating=false;
+    },600);
+
+    cur=n;
+    updateDots();
+  }
+
+  // Touch swipe
+  var touchStartX=0,touchStartY=0,touchStartTime=0;
+  book.addEventListener('touchstart',function(e){
+    touchStartX=e.touches[0].clientX;
+    touchStartY=e.touches[0].clientY;
+    touchStartTime=Date.now();
+  },{passive:true});
+  book.addEventListener('touchend',function(e){
+    var dx=e.changedTouches[0].clientX-touchStartX;
+    var dy=e.changedTouches[0].clientY-touchStartY;
+    var dt=Date.now()-touchStartTime;
+    if(dt<400&&Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)*1.5){
+      if(dx<0)go(cur+1);else go(cur-1);
+    }
+  },{passive:true});
+
+  // Mouse drag
+  var mouseStartX=0,dragging=false;
+  book.addEventListener('mousedown',function(e){mouseStartX=e.clientX;dragging=true;});
+  book.addEventListener('mouseup',function(e){
+    if(!dragging)return;
+    dragging=false;
+    var dx=e.clientX-mouseStartX;
+    if(Math.abs(dx)>50){if(dx<0)go(cur+1);else go(cur-1);}
+  });
+  book.addEventListener('mouseleave',function(){dragging=false;});
+
+  book.ppNext=function(){go(cur+1);};
+  book.ppPrev=function(){go(cur-1);};
+  updateDots();
+}
+
+function refreshPreview(){
+  var el=document.getElementById('invite-preview');
+  if(!el)return;
+  var passHtml=buildPassportInvite('Honoured Guest',false);
+
+  // Inject with scoped CSS for page visibility and shimmer effect
+  el.innerHTML=
+    '<style>'
+    +'.pp-preview-wrap{width:290px;height:430px;position:relative;margin:0 auto}'
+    +'.pp-preview-wrap .pp-book{position:absolute;top:0;left:0;right:0;bottom:0}'
+    +'.pp-preview-wrap .pp-page{position:absolute;top:0;left:0;right:0;bottom:0;overflow:hidden;will-change:transform}'
+    // Gold shimmer animation on PASSPORT text
+    +'@keyframes goldShimmer{0%{background-position:200% center}100%{background-position:-200% center}}'
+    +'.pp-passport-title{'
+    +'  background:linear-gradient(90deg,#a07820 0%,#f5d060 30%,#fff8c0 50%,#f5d060 70%,#a07820 100%);'
+    +'  background-size:200% auto;'
+    +'  -webkit-background-clip:text;'
+    +'  -webkit-text-fill-color:transparent;'
+    +'  background-clip:text;'
+    +'  animation:goldShimmer 3s linear infinite;'
+    +'}'
+    +'</style>'
+    +'<div class="pp-preview-wrap">'+passHtml+'</div>';
+
+  var book=el.querySelector('.pp-book');
+  if(!book)return;
+
+  // Apply shimmer to PASSPORT title div inside cover
+  var titleDivs=el.querySelectorAll('div');
+  for(var i=0;i<titleDivs.length;i++){
+    var d=titleDivs[i];
+    if(d.textContent.trim()==='PASSPORT'){
+      d.classList.add('pp-passport-title');
+      d.style.color='';
+      d.style.webkitTextFillColor='';
+      break;
+    }
+  }
+
+  var pages=Array.prototype.slice.call(book.querySelectorAll('.pp-page'));
+  var gold=book.getAttribute('data-gold')||'#c8aa50';
+  var cur=0,animating=false,total=pages.length;
+
+  // Hard set every page initial state
+  // Force clean initial state on all pages
+  pages.forEach(function(p,i){
+    p.style.transition='none';
+    p.style.transform='translateX('+(i===0?'0':'100%')+')';
+    p.style.opacity=i===0?'1':'0';
+    p.style.zIndex=i===0?'2':'1';
+  });
+
+  function updateDots(){
+    var dots=book.querySelectorAll('.pp-dot');
+    for(var x=0;x<dots.length;x++){
+      var a=x===cur;
+      dots[x].style.background=a?gold:(cur===0?'rgba(255,255,255,0.3)':'rgba(0,0,0,0.15)');
+      dots[x].style.width=a?'14px':'5px';
+    }
+  }
+
+  function go(n){
+    if(n<0||n>=total||animating)return;
+    animating=true;
+    var fwd=n>cur,lv=pages[cur],en=pages[n];
+
+    // Snap all bystanders off-screen
+    for(var i=0;i<total;i++){
+      if(i===cur||i===n)continue;
+      pages[i].style.transition='none';
+      pages[i].style.transform='translateX('+(i<n?'-110%':'110%')+')';
+      pages[i].style.opacity='0';
+      pages[i].style.zIndex='1';
+    }
+
+    // Leaving: center, visible, below entering
+    lv.style.transition='none';
+    lv.style.transform='translateX(0)';
+    lv.style.opacity='1';
+    lv.style.zIndex='2';
+
+    // Entering: off-screen, visible, on top
+    en.style.transition='none';
+    en.style.transform='translateX('+(fwd?'100%':'-100%')+')';
+    en.style.opacity='1';
+    en.style.zIndex='3';
+
+    // Force reflow so transition fires from new position
+    void en.offsetWidth;
+
+    // Slide both
+    lv.style.transition='transform 0.35s cubic-bezier(0.4,0,0.2,1)';
+    lv.style.transform='translateX('+(fwd?'-100%':'100%')+')';
+    en.style.transition='transform 0.35s cubic-bezier(0.4,0,0.2,1)';
+    en.style.transform='translateX(0)';
+
+    cur=n;
+    updateDots();
+
+    setTimeout(function(){
+      lv.style.transition='none';
+      lv.style.opacity='0';
+      lv.style.zIndex='1';
+      en.style.zIndex='2';
+      animating=false;
+    },370);
+  }
+  var tx=0,ty=0,tt=0;
+  book.addEventListener('touchstart',function(e){tx=e.touches[0].clientX;ty=e.touches[0].clientY;tt=Date.now();},{passive:true});
+  book.addEventListener('touchend',function(e){var dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty,dt=Date.now()-tt;if(dt<400&&Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)*1.5){if(dx<0)go(cur+1);else go(cur-1);}},{passive:true});
+  var mx=0,md=false;
+  book.addEventListener('mousedown',function(e){mx=e.clientX;md=true;});
+  book.addEventListener('mouseup',function(e){if(!md)return;md=false;var dx=e.clientX-mx;if(Math.abs(dx)>50){if(dx<0)go(cur+1);else go(cur-1);}});
+  book.addEventListener('mouseleave',function(){md=false;});
+
+  book.ppNext=function(){go(cur+1);};
+  book.ppPrev=function(){go(cur-1);};
+  updateDots();
+}
+
+
+function generateSite(){
+  var btn=document.getElementById('gen-btn');
+  var btn2=document.getElementById('gen-btn-2');
+  var st=document.getElementById('gen-status');
+  var pk=document.getElementById('ejs-pubkey').value.trim();
+  var svc=document.getElementById('ejs-service').value.trim();
+  var tpl=document.getElementById('ejs-template').value.trim();
+  if(!pk||!svc||!tpl){
+    st.className='status-msg error';
+    st.textContent='EmailJS credentials are required. Please complete Step 5 first.';
+    return;
+  }
+  btn.disabled=true;if(btn2)btn2.disabled=true;
+  st.className='status-msg sending';st.textContent='Building website...';
+
+  try{
+  var d=getEventData();
+  var mainTitle=getMainTitle();
+  var cfg=EVENTS[currentEvent];
+  var ds=DESIGNS[currentDesign];
+  var senderName=d.sender_name||cfg.label;
+  var hostEmail=d.host_email||'';
+  var siteUrl=gv('site-url').replace(/\/+$/,''); // strip trailing slash
+  var hostPassword=gv('host-password').trim()||'host2025';
+
+  // --- SEND TAB script (guests managed by client via localStorage) ---
+  var sendScript='var ejsPubKey='+JSON.stringify(pk)+';\n'
+    +'var ejsService='+JSON.stringify(svc)+';\n'
+    +'var ejsTemplate='+JSON.stringify(tpl)+';\n'
+    +'var siteUrl='+JSON.stringify(siteUrl)+';\n'
+    +'var hostPassword='+JSON.stringify(hostPassword)+';\n'
+    +'var senderName='+JSON.stringify(senderName)+';\n'
+    +'var hostEmail='+JSON.stringify(hostEmail)+';\n'
+    +'var eventLabel='+JSON.stringify(cfg.label)+';\n'
+    +'var mainTitle='+JSON.stringify(mainTitle)+';\n'
+    +'var guests=JSON.parse(localStorage.getItem("guest_list")||"[]");\n'
+    +'var sentLog=JSON.parse(localStorage.getItem("sent_log")||"{}");\n'
+    +'var rsvpStatuses=JSON.parse(localStorage.getItem("rsvp_statuses")||"{}");\n'
+    +'function saveGuests(){localStorage.setItem("guest_list",JSON.stringify(guests));}\n'
+    +'function saveSent(){localStorage.setItem("sent_log",JSON.stringify(sentLog));}\n'
+    +'function saveRsvp(){localStorage.setItem("rsvp_statuses",JSON.stringify(rsvpStatuses));}\n'
+
+    // Guest management functions
+    +'function addGuest(){\n'
+    +'  guests.push({name:"",email:""});saveGuests();renderList();\n'
+    +'  var inputs=document.querySelectorAll(".g-name-input");inputs[inputs.length-1].focus();\n'
+    +'}\n'
+    +'function removeGuest(i){\n'
+    +'  if(!confirm("Remove "+( guests[i].name||"this guest")+"?"))return;\n'
+    +'  var key=guests[i].email||guests[i].name;\n'
+    +'  delete sentLog[key];delete rsvpStatuses[key];\n'
+    +'  guests.splice(i,1);saveGuests();saveSent();saveRsvp();renderList();\n'
+    +'}\n'
+    +'function updateGuest(i,field,val){\n'
+    +'  var f=field===0?"name":field===1?"email":field;\n'
+    +'  guests[i][f]=val;saveGuests();\n'
+    +'  // Update Send button state live without re-rendering the whole list\n'
+    +'  var btns=document.querySelectorAll("[data-idx=\'"+i+"\']");\n'
+    +'  var hasEmail=guests[i].email&&guests[i].email.trim();\n'
+    +'  btns.forEach(function(b){b.disabled=!hasEmail;});\n'
+    +'  // Update KPI counts\n'
+    +'  var sent=0,unsent=0;\n'
+    +'  guests.forEach(function(g){var k=g.email||g.name;if(k&&sentLog[k])sent++;else if(g.email&&g.email.trim())unsent++;});\n'
+    +'  var se=document.getElementById("cnt-sent"),ue=document.getElementById("cnt-unsent"),te=document.getElementById("cnt-total"),gc=document.getElementById("guest-count");\n'
+    +'  if(se)se.textContent=sent;if(ue)ue.textContent=unsent;if(te)te.textContent=guests.length;if(gc)gc.textContent=guests.length;\n'
+    +'}\n'
+
+    +'function showTab(tab){\n'
+    +'  document.querySelectorAll(".tab-panel").forEach(function(p){p.style.display="none";});\n'
+    +'  document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("tab-active");});\n'
+    +'  document.getElementById("tab-"+tab).style.display="block";\n'
+    +'  document.getElementById("tbtn-"+tab).classList.add("tab-active");\n'
+    +'  if(tab==="rsvp")renderRsvp();\n'
+    +'  if(tab==="send")renderList();\n'
+    +'  if(tab==="preview"){populatePreviewSelect();updatePreview();}\n'
+    +'}\n'
+
+    +'function getEmailBody(guestName){\n'
+    +'  return '+JSON.stringify(buildEmailBody('__GNAME__')).replace(/__GNAME__/g,'"'+"+guestName.toUpperCase()+"+'"').replace(/__GNAME_RAW__/g,'"'+"+guestName+"+'"').replace(/<\/script>/gi,'<\\/script>')+';\n'
+    +'}\n'
+
+    +'function getPassportHtml(guestName){\n'
+    +'  return '+JSON.stringify(buildPassportInvite('__GNAME__',false)).replace(/__GNAME__/g,'"'+"+guestName.toUpperCase()+"+'"').replace(/__GNAME_RAW__/g,'"'+"+guestName+"+'"').replace(/<\/script>/gi,'<\\/script>')+';\n'
+    +'}\n'
+
+    +'function getInvitePageHtml(guestName){\n'
+    +'  return '+JSON.stringify(buildPassportInvite('__GNAME__',true)).replace(/__GNAME__/g,'"'+"+guestName.toUpperCase()+"+'"').replace(/__GNAME_RAW__/g,'"'+"+guestName+"+'"').replace(/<\/script>/gi,'<\\/script>')+';\n'
+    +'}\n'
+
+    +'function renderList(){\n'
+    +'  var list=document.getElementById("glist"),sent=0,unsent=0;\n'
+    +'  var html="";\n'
+    +'  guests.forEach(function(g,i){\n'
+    +'    var key=g.email||g.name,isSent=!!(key&&sentLog[key]);\n'
+    +'    if(isSent)sent++;else if(g.email&&g.email.trim())unsent++;\n'
+    +'    html+="<div class=\'gsi\'>";\n'
+    // Editable name + email inputs
+    +'    html+="<div style=\'flex:1;display:flex;gap:6px;flex-wrap:wrap\'>";\n'
+    +'    html+="<input class=\'g-name-input\' type=\'text\' placeholder=\'Guest name\' value=\'"+g.name.replace(/\'/g,"&#39;")+"\' ";\n'
+    +'    html+="oninput=\'updateGuest("+i+",0,this.value)\' style=\'flex:1;min-width:100px;padding:5px 8px;border:1px solid #ddd;border-radius:6px;font-size:12px\'>";\n'
+    +'    html+="<input type=\'email\' placeholder=\'email@example.com\' value=\'"+g.email.replace(/\'/g,"&#39;")+"\' ";\n'
+    +'    html+="oninput=\'updateGuest("+i+",1,this.value)\' style=\'flex:1;min-width:140px;padding:5px 8px;border:1px solid #ddd;border-radius:6px;font-size:12px\'>";\n'
+    +'    html+="</div>";\n'
+    // Status badge
+    +'    html+="<div style=\'min-width:60px;text-align:center\'>"+(isSent?"<span class=\'badge-sent\'>&#10003; Sent</span>":"<span class=\'badge-pending\'>Pending</span>")+"</div>";\n'
+    // Actions
+    +'    html+="<div style=\'display:flex;gap:5px\'>";\n'
+    +'    html+="<button class=\'btn-one\' data-idx=\'"+i+"\' "+(g.email&&g.email.trim()?"":"disabled title=\'Add email first\' ")+">"+(isSent?"Resend":"Send")+"</button>";\n'
+    +'    html+="<button onclick=\'removeGuest("+i+")\' style=\'padding:5px 8px;background:none;border:1px solid #ddd;border-radius:6px;color:#bbb;cursor:pointer;font-size:12px\' onmouseover=\'this.style.color=\\\'#e74c3c\\\'\' onmouseout=\'this.style.color=\\\'#bbb\\\'\'>&#10005;</button>";\n'
+    +'    html+="</div>";\n'
+    +'    html+="</div>";\n'
+    +'  });\n'
+    +'  list.innerHTML=html;\n'
+    +'  document.getElementById("cnt-sent").textContent=sent;\n'
+    +'  document.getElementById("cnt-total").textContent=guests.length;\n'
+    +'  var gc=document.getElementById("guest-count");if(gc)gc.textContent=guests.length;\n'
+    +'  document.getElementById("cnt-unsent").textContent=unsent;\n'
+    +'  document.querySelectorAll(".btn-one").forEach(function(btn){\n'
+    +'    btn.addEventListener("click",function(){sendOne(parseInt(this.dataset.idx));});\n'
+    +'  });\n'
+    +'}\n'
+
+    +'function sendOne(idx){\n'
+    +'  var g=guests[idx];\n'
+    +'  if(!g.email){alert("No email for "+g.name);return;}\n'
+    +'  var btns=document.querySelectorAll("[data-idx=\'"+idx+"\']");\n'
+    +'  btns.forEach(function(b){b.disabled=true;b.textContent="Sending...";});\n'
+    +'  emailjs.init({publicKey:ejsPubKey});\n'
+    +'  emailjs.send(ejsService,ejsTemplate,{\n'
+    +'    to_name:g.name||"Guest",to_email:g.email,\n'
+    +'    subject:"You are invited! - "+eventLabel+": "+mainTitle,\n'
+    +'    from_name:senderName,from_email:hostEmail,message:getEmailBody(g.name),reply_to:hostEmail\n'
+    +'  }).then(function(){\n'
+    +'    sentLog[g.email||g.name]=new Date().toLocaleString();\n'
+    +'    saveSent();renderList();\n'
+    +'    showStatus("Sent to "+g.name+"!","success");\n'
+    +'  },function(err){\n'
+    +'    btns.forEach(function(b){b.disabled=false;b.textContent="Retry";});\n'
+    +'    var msg=err.text||JSON.stringify(err);\n'
+    +'    var hint="";\n'
+    +'    if(msg.includes("template") || msg.includes("Template")) hint=" → Go to emailjs.com/admin/templates, open your template, copy the ID from the URL (starts with template_)";\n'
+    +'    else if(msg.includes("service") || msg.includes("Service")) hint=" → Go to emailjs.com/admin, open Email Services, copy your Service ID";\n'
+    +'    else if(msg.includes("public") || msg.includes("key") || msg.includes("auth")) hint=" → Go to emailjs.com Account → General, copy your Public Key";\n'
+    +'    else if(msg.includes("quota") || msg.includes("limit")) hint=" → You have reached your EmailJS monthly limit (200 free emails). Upgrade at emailjs.com/pricing";\n'
+    +'    showStatus("Failed: "+msg+hint,"error");\n'
+    +'  });\n'
+    +'}\n'
+
+    +'function sendAll(){\n'
+    +'  var valid=guests.filter(function(g){return g.name.trim()&&g.email.trim();});\n'
+    +'  if(!valid.length){showStatus("No guests with name and email found. Add guests first.","error");return;}\n'
+    +'  var mo=document.getElementById("modal-send-confirm");\n'
+    +'  var mc=document.getElementById("modal-send-count");\n'
+    +'  if(mc)mc.textContent=valid.length;\n'
+    +'  if(mo){mo.style.display="flex";return;}\n'
+    +'  sendAllConfirmed();\n'
+    +'}\n'
+    +'function sendAllConfirmed(){\n'
+    +'  var valid=guests.filter(function(g){return g.name.trim()&&g.email.trim();});\n'
+    +'  var allBtn=document.getElementById("btn-send-all");\n'
+    +'  allBtn.disabled=true;\n'
+    +'  var i=0,sent=0,failedNames=[];\n'
+    +'  function next(){\n'
+    +'    if(i>=valid.length){\n'
+    +'      allBtn.disabled=false;allBtn.textContent="&#9654; Send all";\n'
+    +'      renderList();\n'
+    +'      if(failedNames.length){\n'
+    +'        showStatus(sent+" sent. Failed ("+failedNames.length+"): "+failedNames.join(", ")+". Retry these individually.","error");\n'
+    +'      } else {\n'
+    +'        showStatus(sent+" invitation"+(sent!==1?"s":"")+" sent successfully!","success");\n'
+    +'      }\n'
+    +'      return;\n'
+    +'    }\n'
+    +'    var g=valid[i++];\n'
+    +'    allBtn.textContent="Sending "+i+"/"+valid.length+"...";\n'
+    +'    emailjs.init({publicKey:ejsPubKey});\n'
+    +'    emailjs.send(ejsService,ejsTemplate,{\n'
+    +'      to_name:g.name||"Guest",to_email:g.email,\n'
+    +'      subject:"You are invited! - "+eventLabel+": "+mainTitle,\n'
+    +'      from_name:senderName,message:getEmailBody(g.name),reply_to:hostEmail\n'
+    +'    }).then(function(){\n'
+    +'      sent++;sentLog[g.email||g.name]=new Date().toLocaleString();\n'
+    +'      saveSent();setTimeout(next,400);\n'
+    +'    },function(){failedNames.push(g.name);setTimeout(next,400);});\n'
+    +'  }\n'
+    +'  next();\n'
+    +'}\n'
+
+    +'function renderRsvp(){\n'
+    +'  guests=JSON.parse(localStorage.getItem("guest_list")||"[]");\n'
+    +'  rsvpStatuses=JSON.parse(localStorage.getItem("rsvp_statuses")||"{}");\n'
+    +'  var a=0,dec=0,p=0,rows="";\n'
+    +'  for(var i=0;i<guests.length;i++){\n'
+    +'    var g=guests[i],key=g.email||g.name,s=rsvpStatuses[key]||"pending";\n'
+    +'    if(s==="attend")a++;else if(s==="decline")dec++;else p++;\n'
+    +'    var badge=s==="attend"?"<span class=\'badge-attend\'>Attending</span>":s==="decline"?"<span class=\'badge-decline\'>Declined</span>":"<span class=\'badge-pending\'>Pending</span>";\n'
+    +'    var ek=encodeURIComponent(key);\n'
+    +'    rows+="<tr><td>"+(g.name||"-")+"</td><td style=\'color:#888;font-size:12px\'>"+(g.email||"-")+"</td><td>"+badge+"</td><td style=\'display:flex;gap:5px\'>";\n'
+    +'    rows+="<button data-key=\'"+ek+"\' data-val=\'attend\' class=\'rb-btn\'>&#10003; Attending</button>";\n'
+    +'    rows+="<button data-key=\'"+ek+"\' data-val=\'decline\' class=\'rb-btn decline-btn\'>&#10007; Declined</button>";\n'
+    +'    rows+="</td></tr>";\n'
+    +'  }\n'
+    +'  document.getElementById("rsvp-body").innerHTML=rows;\n'
+    +'  document.getElementById("rsvp-ca").textContent=a;\n'
+    +'  document.getElementById("rsvp-cd").textContent=dec;\n'
+    +'  document.getElementById("rsvp-cp").textContent=p;\n'
+    +'  document.querySelectorAll(".rb-btn").forEach(function(b){\n'
+    +'    b.addEventListener("click",function(){\n'
+    +'      rsvpStatuses[decodeURIComponent(this.dataset.key)]=this.dataset.val;\n'
+    +'      saveRsvp();renderRsvp();\n'
+    +'    });\n'
+    +'  });\n'
+    +'}\n'
+
+    +'function showStatus(msg,type){\n'
+    +'  var el=document.getElementById("status");\n'
+    +'  el.textContent=msg;\n'
+    +'  el.className="status-box "+(type==="success"?"s-success":"s-error");\n'
+    +'  setTimeout(function(){el.className="status-box";el.textContent="";},8000);\n'
+    +'}\n'
+    +'function exportGuestCSV(){\n'
+    +'  var rows=["Name,Email,Status"];\n'
+    +'  guests.forEach(function(g){\n'
+    +'    var key=g.email||g.name;\n'
+    +'    var sent=!!(key&&sentLog[key])?"Sent":"Not sent";\n'
+    +'    rows.push(\'"\'+g.name.replace(/"/g,\'""\')+\'","\'+g.email.replace(/"/g,\'""\')+\'","\'+sent+\'"\');\n'
+    +'  });\n'
+    +'  var blob=new Blob([rows.join("\\n")],{type:"text/csv"});\n'
+    +'  var a=document.createElement("a");a.href=URL.createObjectURL(blob);\n'
+    +'  a.download="guest_list_'+mainTitle.replace(/[^a-zA-Z0-9]/g,"_").slice(0,30)+'.csv";a.click();\n'
+    +'}\n'
+    +'function exportRsvpCSV(){\n'
+    +'  var rows=["Name,Email,RSVP Status"];\n'
+    +'  guests.forEach(function(g){\n'
+    +'    var key=g.email||g.name;\n'
+    +'    var s=rsvpStatuses[key]||"pending";\n'
+    +'    var label=s==="attend"?"Attending":s==="decline"?"Declined":"Pending";\n'
+    +'    rows.push(\'"\'+g.name.replace(/"/g,\'""\')+\'","\'+g.email.replace(/"/g,\'""\')+\'","\'+label+\'"\');\n'
+    +'  });\n'
+    +'  var blob=new Blob([rows.join("\\n")],{type:"text/csv"});\n'
+    +'  var a=document.createElement("a");a.href=URL.createObjectURL(blob);\n'
+    +'  a.download="rsvp_'+mainTitle.replace(/[^a-zA-Z0-9]/g,"_").slice(0,30)+'.csv";a.click();\n'
+    +'}\n'
+
+    // Batch import
+    +'function toggleBatch(){\n'
+    +'  var p=document.getElementById("batch-panel");\n'
+    +'  p.style.display=p.style.display==="none"?"block":"none";\n'
+    +'  if(p.style.display==="block")document.getElementById("batch-input").focus();\n'
+    +'}\n'
+    +'function importBatch(){\n'
+    +'  var text=document.getElementById("batch-input").value.trim();\n'
+    +'  if(!text)return;\n'
+    +'  var lines=text.split("\\n"),added=0,skipped=0;\n'
+    +'  lines.forEach(function(line){\n'
+    +'    line=line.trim();\n'
+    +'    if(!line)return;\n'
+    +'    var parts=line.split(/,(.+)/);\n'
+    +'    var name=(parts[0]||"").trim();\n'
+    +'    var email=(parts[1]||"").trim();\n'
+    +'    if(!name){skipped++;return;}\n'
+    +'    guests.push({name:name,email:email});\n'
+    +'    added++;\n'
+    +'  });\n'
+    +'  saveGuests();\n'
+    +'  document.getElementById("batch-input").value="";\n'
+    +'  document.getElementById("batch-status").textContent=added+" guests added"+(skipped?" ("+skipped+" skipped)":"")+".";\n'
+    +'  setTimeout(function(){document.getElementById("batch-status").textContent="";},4000);\n'
+    +'  renderList();\n'
+    +'  populatePreviewSelect();\n'
+    +'}\n'
+
+    // Preview per guest
+    +'function populatePreviewSelect(){\n'
+    +'  var sel=document.getElementById("preview-guest-select");\n'
+    +'  if(!sel)return;\n'
+    +'  var cur=sel.value;\n'
+    +'  sel.innerHTML="<option value=\\"\\">— Sample Guest —</option>";\n'
+    +'  guests.forEach(function(g,i){\n'
+    +'    if(g.name.trim())sel.innerHTML+="<option value=\\""+i+"\\">"+g.name+"</option>";\n'
+    +'  });\n'
+    +'  sel.value=cur;\n'
+    +'}\n'
+    +'function updatePreview(){\n'
+    +'  var sel=document.getElementById("preview-guest-select");\n'
+    +'  var wrap=document.getElementById("preview-wrap");\n'
+    +'  if(!sel||!wrap)return;\n'
+    +'  var idx=sel.value;\n'
+    +'  var name=idx===""?"Sample Guest":(guests[parseInt(idx)]?guests[parseInt(idx)].name:"Sample Guest");\n'
+    +'  wrap.innerHTML=\'<div style="width:320px;height:460px;position:relative;margin:0 auto">\'+getPassportHtml(name)+\'</div>\';\n'
+    +'  if(typeof QRCode!=="undefined"){var c=wrap.querySelector("canvas[id^=qr]");if(c){try{QRCode.toCanvas(c,c.dataset.url||"",{width:80,margin:1});}catch(e){}}}\n'
+    +'  initPassportBook(wrap.querySelector(".pp-book"));\n'
+    +'}\n'
+
+    // Download individual invitation
+    +'function downloadInvitation(){\n'
+    +'  var sel=document.getElementById("preview-guest-select");\n'
+    +'  var idx=sel?sel.value:"";\n'
+    +'  var guest=idx===""?{name:"Honoured Guest",email:""}:(guests[parseInt(idx)]||{name:"Honoured Guest",email:""});\n'
+    +'  var html=getInvitePageHtml(guest.name);\n'
+    +'  var blob=new Blob([html],{type:"text/html"});\n'
+    +'  var url=URL.createObjectURL(blob);\n'
+    +'  var a=document.createElement("a");\n'
+    +'  a.href=url;\n'
+    +'  a.download=(guest.name||"Invitation").replace(/[^a-zA-Z0-9]/g,"_")+"_Invitation.html";\n'
+    +'  a.click();\n'
+    +'  URL.revokeObjectURL(url);\n'
+    +'}\n'
+
+    +'(function(){\n'
+    +'  var params=new URLSearchParams(window.location.search);\n'
+    +'  if(params.get("g")||params.get("rsvp"))return;\n'
+    +'  if(params.get("host")==="1")return;\n'
+    +'  window._siteLocked=true;\n'
+    +'  var b=document.body;b.innerHTML="";\n'
+    +'  b.style.cssText="margin:0;background:#3d1c1c;min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif";\n'
+    +'  var box=document.createElement("div");box.style.cssText="text-align:center;padding:40px 24px;max-width:300px";\n'
+    +'  var icon=document.createElement("div");icon.textContent="\uD83D\uDCDA";icon.style.cssText="font-size:48px;margin-bottom:16px";box.appendChild(icon);\n'
+    +'  var title=document.createElement("div");title.textContent="PASSPORT";title.style.cssText="font-size:28px;font-weight:bold;color:#c8aa50;letter-spacing:4px;margin-bottom:4px";box.appendChild(title);\n'
+    +'  var sub=document.createElement("div");sub.textContent="to a Special Celebration";sub.style.cssText="font-size:12px;color:#c8aa50;opacity:.5;margin-bottom:24px;font-style:italic";box.appendChild(sub);\n'
+    +'  var msg=document.createElement("div");msg.innerHTML="This is a private invitation site.<br>Please use your personal invitation link.";msg.style.cssText="font-size:13px;color:#fff;opacity:.7;margin-bottom:24px;line-height:1.6";box.appendChild(msg);\n'
+    +'  var inp=document.createElement("input");inp.type="password";inp.placeholder="Host access code";inp.style.cssText="width:100%;padding:10px;border:1px solid #c8aa50;border-radius:6px;background:rgba(255,255,255,0.08);color:#fff;font-size:14px;text-align:center;box-sizing:border-box;margin-bottom:8px";box.appendChild(inp);\n'
+    +'  var btn=document.createElement("button");btn.textContent="Enter";btn.style.cssText="width:100%;padding:10px;background:#c8aa50;color:#3d1c1c;border:none;border-radius:6px;font-weight:bold;font-size:14px;cursor:pointer";box.appendChild(btn);\n'
+    +'  var err=document.createElement("div");err.style.cssText="color:#e88;font-size:11px;margin-top:8px";box.appendChild(err);\n'
+    +'  b.appendChild(box);\n'
+    +'  function tryPin(){var pin=inp.value.trim();if(pin===hostPassword||pin===ejsPubKey.slice(-4)){window.location.href=window.location.pathname+"?host=1";}else{err.textContent="Incorrect access code.";}}\n'
+    +'  btn.addEventListener("click",tryPin);\n'
+    +'  inp.addEventListener("keydown",function(e){if(e.key==="Enter")tryPin();});\n'
+    +'})();\n'
+    +'if(!window._siteLocked){renderList();populatePreviewSelect();var _ib=document.querySelector(\'.pp-book\');if(_ib)initPassportBook(_ib);}\n'
+    // Restore stamp if guest already RSVPed in a previous visit
+    +'(function(){\n'
+    +'  var params=new URLSearchParams(window.location.search);\n'
+    +'  var g=params.get("g");\n'
+    +'  if(!g)return;\n'
+    +'  var guestName=decodeURIComponent(g);\n'
+    +'  var statuses=JSON.parse(localStorage.getItem("rsvp_statuses")||"{}");\n'
+    +'  var guestList=JSON.parse(localStorage.getItem("guest_list")||"[]");\n'
+    +'  var key="";\n'
+    +'  for(var i=0;i<guestList.length;i++){if(guestList[i].name&&guestList[i].name.toLowerCase()===guestName.toLowerCase()){key=guestList[i].email||guestList[i].name;break;}}\n'
+    +'  if(!key)key=guestName;\n'
+    +'  if(statuses[key]==="attend"||statuses[guestName]==="attend"){\n'
+    +'    var sw=document.getElementById("pp-rsvp-stamp"),sd=document.getElementById("pp-stamp-date");\n'
+    +'    if(sw){sw.style.display="flex";}\n'
+    +'    if(sd){var rsvpDate=localStorage.getItem("rsvp_date_"+key)||"";sd.textContent=rsvpDate||new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});}\n'
+    +'  }\n'
+    +'  var _gn=guestName;\n'
+    +'  function lockToGuestView(){\n'
+    +'    var inviteHtml=getInvitePageHtml(_gn);\n'
+    +'    document.open();document.write(inviteHtml);document.close();\n'
+    +'  }\n'
+    +'  setTimeout(lockToGuestView,50);\n'
+    +'})();\n'
+    // Auto-RSVP handler - r
+    +'(function(){\n'
+    +'  var params=new URLSearchParams(window.location.search);\n'
+    +'  var rsvp=params.get("rsvp"),g=params.get("g");\n'
+    +'  if(!rsvp||!g)return;\n'
+    +'  var guestName=decodeURIComponent(g);\n'
+    +'  var status=rsvp==="attend"?"attend":"decline";\n'
+    // Find the guest key in guests list (match by name)
+    +'  var key="";\n'
+    +'  var guestList=JSON.parse(localStorage.getItem("guest_list")||"[]");\n'
+    +'  for(var i=0;i<guestList.length;i++){\n'
+    +'    if(guestList[i].name&&guestList[i].name.toLowerCase()===guestName.toLowerCase()){\n'
+    +'      key=guestList[i].email||guestList[i].name;break;\n'
+    +'    }\n'
+    +'  }\n'
+    +'  if(!key)key=guestName;\n'
+    +'  var statuses=JSON.parse(localStorage.getItem("rsvp_statuses")||"{}");\n'
+    +'  statuses[key]=status;\n'
+    +'  localStorage.setItem("rsvp_statuses",JSON.stringify(statuses));\n'
+    +'  rsvpStatuses=statuses;\n'
+    +'  if(status==="attend")localStorage.setItem("rsvp_date_"+key,new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}));\n'
+    // Show ATTENDING stamp on the passport RSVP page if attending
+    +'  if(status==="attend"){\n'
+    +'    var stampWrap=document.getElementById("pp-rsvp-stamp");\n'
+    +'    var stampDate=document.getElementById("pp-stamp-date");\n'
+    +'    if(stampWrap){stampWrap.style.display="flex";}\n'
+    +'    if(stampDate){var d=new Date();stampDate.textContent=d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});}\n'
+    +'  }\n'
+    // Show a full-screen confirmation to the guest
+    +'  document.body.style.display="none";\n'
+    +'  var coverBg="'+ds.coverBgSolid+'";\n'
+    +'  var gold="'+ds.gold+'";\n'
+    +'  var conf=document.createElement("div");\n'
+    +'  conf.style.cssText="position:fixed;top:0;left:0;right:0;bottom:0;background:"+coverBg+";display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Georgia,serif;color:"+gold+";text-align:center;padding:32px";\n'
+    +'  var icon=status==="attend"?"✓":"✕";\n'
+    +'  var msg=status==="attend"?"Your attendance has been confirmed!":"Your response has been recorded.";\n'
+    +'  var sub=status==="attend"?"We look forward to seeing you!":"Thank you for letting us know.";\n'
+    +'  conf.innerHTML="<div style=\\"font-size:64px;margin-bottom:24px;opacity:.9\\">"+icon+"</div>"\n'
+    +'    +"<div style=\\"font-size:24px;font-weight:bold;margin-bottom:12px;color:#fff\\">"+msg+"</div>"\n'
+    +'    +"<div style=\\"font-size:14px;opacity:.7;color:"+gold+"\\">"+sub+"</div>"\n'
+    +'    +"<div style=\\"margin-top:32px;font-size:12px;opacity:.5;color:"+gold+"\\">"+guestName+"</div>"\n'
+    +'    +"<a href=\\\\"./?'+'g='+encodeURIComponent(guestName)+'\\\\\"" style=\\"margin-top:40px;padding:12px 32px;background:rgba(255,255,255,0.1);border:1px solid "+gold+";border-radius:24px;color:"+gold+";text-decoration:none;font-size:13px;letter-spacing:1px\\">← View Invitation</a>";\n'
+    +'  document.body.parentElement.appendChild(conf);\n'
+    +'})();\n'
+    // Passport navigation globals - must be in main script, not in innerHTML-injected passport
+    +'function initPassportBook(book){\n'
+    +'  if(!book||book._ppInit)return;book._ppInit=true;\n'
+    +'  var pages=Array.prototype.slice.call(book.querySelectorAll(\'.pp-page\'));\n'
+    +'  var gold=book.getAttribute(\'data-gold\')||\"#c8aa50\";\n'
+    +'  var cur=0,animating=false,total=pages.length;\n'
+    +'  pages.forEach(function(p,i){p.style.transition=\'none\';p.style.transform=i===0?\'translateX(0)\':\'translateX(100%)\';p.style.opacity=i===0?\'1\':\'0\';p.style.zIndex=i===0?\'2\':\'1\';});\n'
+    +'  function updateDots(){book.querySelectorAll(\'.pp-dot\').forEach(function(d,i){var a=i===cur;d.style.background=a?gold:(cur===0?\'rgba(255,255,255,0.3)\':\'rgba(0,0,0,0.15)\');d.style.width=a?\'14px\':\'5px\';});}\n'
+    +'  function go(n){if(n<0||n>=total||animating)return;animating=true;var fwd=n>cur,lv=pages[cur],en=pages[n];for(var i=0;i<total;i++){if(i===cur||i===n)continue;pages[i].style.transition=\'none\';pages[i].style.transform=\'translateX(\'+(i<n?\'-110%\':\'110%\')+\')\';pages[i].style.opacity=\'0\';pages[i].style.zIndex=\'1\';}lv.style.transition=\'none\';lv.style.transform=\'translateX(0)\';lv.style.opacity=\'1\';lv.style.zIndex=\'2\';en.style.transition=\'none\';en.style.transform=\'translateX(\'+(fwd?\'100%\':\'-100%\')+\')\';en.style.opacity=\'1\';en.style.zIndex=\'3\';void en.offsetWidth;lv.style.transition=\'transform 0.35s cubic-bezier(0.4,0,0.2,1)\';lv.style.transform=\'translateX(\'+(fwd?\'-100%\':\'100%\')+\')\';en.style.transition=\'transform 0.35s cubic-bezier(0.4,0,0.2,1)\';en.style.transform=\'translateX(0)\';cur=n;updateDots();setTimeout(function(){lv.style.transition=\'none\';lv.style.opacity=\'0\';lv.style.zIndex=\'1\';en.style.zIndex=\'2\';animating=false;},370);}\n'
+    +'  var tx=0,ty=0,tt=0;book.addEventListener(\'touchstart\',function(e){tx=e.touches[0].clientX;ty=e.touches[0].clientY;tt=Date.now();},{passive:true});book.addEventListener(\'touchend\',function(e){var dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty,dt=Date.now()-tt;if(dt<400&&Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)*1.5){if(dx<0)go(cur+1);else go(cur-1);}},{passive:true});\n'
+    +'  var mx=0,md=false;book.addEventListener(\'mousedown\',function(e){mx=e.clientX;md=true;});book.addEventListener(\'mouseup\',function(e){if(!md)return;md=false;var dx=e.clientX-mx;if(Math.abs(dx)>50){if(dx<0)go(cur+1);else go(cur-1);}});book.addEventListener(\'mouseleave\',function(){md=false;});\n'
+    +'  book.ppNext=function(){go(cur+1);};book.ppPrev=function(){go(cur-1);};updateDots();\n'
+    +'}\n'
+    +'function ppNext(btn){var b=btn.closest(\'.pp-book\');if(b&&b.ppNext)b.ppNext();}\n'
+    +'function ppPrev(btn){var b=btn.closest(\'.pp-book\');if(b&&b.ppPrev)b.ppPrev();}\n'
+    +'var _ib=document.querySelector(\'.pp-book\');if(_ib)initPassportBook(_ib);\n';
+
+  // --- Passport preview HTML (inline, no docHead) ---
+  var passportPreviewHTML=buildPassportInvite('Sample Guest',false);
+
+  // --- Build the single-page client website ---
+  var clientHTML='<!DOCTYPE html>\n'
+    +'<html lang="en">\n<head>\n'
+    +'<meta charset="UTF-8"/>\n'
+    +'<meta name="viewport" content="width=device-width,initial-scale=1"/>\n'
+    +'<title>'+mainTitle+' &mdash; Invitation</title>\n'
+    +'<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime&family=IM+Fell+English:ital@0;1&family=Cinzel:wght@400;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>\n'
+    +'<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"><\/script>\n'
+    +'<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"><\/script>\n'
+    +'<style>\n'
+    +'*{box-sizing:border-box;margin:0;padding:0}\n'
+    +'body{font-family:Lato,sans-serif;background:#f0ece4;min-height:100vh;color:#222}\n'
+    +'.site-header{background:#3d1c1c;padding:0 24px;display:flex;align-items:center;justify-content:space-between}\n'
+    +'.site-title{font-family:Cinzel,serif;font-size:13px;color:#c8aa50;letter-spacing:1px;padding:14px 0}\n'
+    +'.site-sub{font-size:11px;color:#c8aa50;opacity:.6;padding:14px 0}\n'
+    +'.tab-bar{background:#3d1c1c;display:flex;border-top:1px solid rgba(255,255,255,0.08);padding:0 24px}\n'
+    +'.tab-btn{padding:12px 20px;font-family:Cinzel,serif;font-size:11px;letter-spacing:1px;color:#c8aa50;opacity:.5;background:none;border:none;cursor:pointer;border-bottom:3px solid transparent;transition:all .2s}\n'
+    +'.tab-btn:hover{opacity:.8}\n'
+    +'.tab-active{opacity:1;border-bottom-color:#c8aa50}\n'
+    +'.tab-panel{display:none;padding:24px;max-width:900px;margin:0 auto}\n'
+    +'.panel-header{background:'+ds.coverBgSolid+';color:'+ds.gold+';border-radius:10px;padding:18px 22px;margin-bottom:16px}\n'
+    +'.panel-header h2{font-family:Cinzel,serif;font-size:16px;letter-spacing:1px;margin-bottom:3px}\n'
+    +'.panel-header p{font-size:12px;opacity:.7}\n'
+    +'.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}\n'
+    +'.kpi{background:#fff;border-radius:9px;padding:14px;text-align:center;border:1px solid #eee}\n'
+    +'.kpi-n{font-family:Cinzel,serif;font-size:26px;font-weight:700;margin-bottom:2px}\n'
+    +'.kpi-l{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#999}\n'
+    +'.kpi-sent .kpi-n{color:#2d6a4f}.kpi-total .kpi-n{color:#3d1c1c}\n'
+    +'.kpi-attend .kpi-n{color:#2d6a4f}.kpi-decline .kpi-n{color:#8b1a1a}.kpi-pending .kpi-n{color:#856404}\n'
+    +'.send-bar{display:flex;gap:10px;margin-bottom:14px;align-items:center;flex-wrap:wrap}\n'
+    +'.btn-send-all{padding:11px 22px;background:#3d1c1c;color:#c8aa50;border:none;border-radius:8px;font-family:Cinzel,serif;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:1px;transition:background .2s}\n'
+    +'.btn-send-all:hover{background:#5a1220}.btn-send-all:disabled{background:#ccc;color:#888;cursor:not-allowed}\n'
+    +'.status-box{font-size:12px;padding:8px 12px;border-radius:6px;min-width:100px}\n'
+    +'.s-success{background:#e8f5e9;color:#2d6a4f}.s-error{background:#fde8e8;color:#8b1a1a}\n'
+    +'.hint-box{background:#fff3cd;border:1px solid #ffe082;border-radius:7px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#856404;line-height:1.6}\n'
+    +'.guest-list{display:flex;flex-direction:column;gap:7px}\n'
+    +'.gsi{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fff;border-radius:9px;border:1px solid #eee;flex-wrap:wrap}\n'
+    +'.gsi-info{flex:1;min-width:120px}.gsi-name{font-weight:700;font-size:13px}.gsi-email{font-size:11px;color:#999}\n'
+    +'.gsi-status{min-width:70px;text-align:center}\n'
+    +'.badge-sent{background:#e8f5e9;color:#2d6a4f;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;display:inline-block}\n'
+    +'.badge-pending{background:#fff3cd;color:#856404;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;display:inline-block}\n'
+    +'.badge-attend{background:#e8f5e9;color:#2d6a4f;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;display:inline-block}\n'
+    +'.badge-decline{background:#fde8e8;color:#8b1a1a;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;display:inline-block}\n'
+    +'.btn-one{padding:6px 13px;background:#7a1c2e;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;transition:background .2s}\n'
+    +'.btn-one:hover{background:#5a1220}.btn-one:disabled{background:#ccc;cursor:not-allowed}\n'
+    +'table{width:100%;border-collapse:collapse;background:#fff;border-radius:9px;overflow:hidden;border:1px solid #eee}\n'
+    +'thead tr{background:#f8f4ee}\n'
+    +'th{padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;border-bottom:1px solid #eee}\n'
+    +'td{padding:10px 14px;font-size:13px;border-bottom:1px solid #f0ece4;vertical-align:middle}\n'
+    +'.rb-btn{padding:5px 10px;background:#e8f5e9;color:#2d6a4f;border:1px solid #b2dfdb;border-radius:5px;cursor:pointer;font-size:11px;font-weight:700;margin-right:4px}\n'
+    +'.decline-btn{background:#fde8e8;color:#8b1a1a;border-color:#ffcdd2}\n'
+    +'.preview-wrap{display:flex;justify-content:center;padding:20px 0;background:#d0c8bc;min-height:520px}\n'
+    +'@keyframes ppSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}\n'
+    +'</style>\n</head>\n<body>\n'
+
+    // Header
+    +'<div class="site-header">'
+    +'<span class="site-title">'+mainTitle+'</span>'
+    +'<span class="site-sub">'+cfg.label+' &middot; <span id="guest-count">0</span> guests</span>'
+    +'</div>\n'
+
+    // Tab bar
+    +'<div class="tab-bar">'
+    +'<button class="tab-btn tab-active" id="tbtn-send" onclick="showTab(\'send\')">&#9654; Send Invitations</button>'
+    +'<button class="tab-btn" id="tbtn-rsvp" onclick="showTab(\'rsvp\')">&#10003; RSVP Tracker</button>'
+    +'<button class="tab-btn" id="tbtn-preview" onclick="showTab(\'preview\')">&#128444; Invitation Preview</button>'
+    +'</div>\n'
+
+    // SEND TAB
+    +'<div class="tab-panel" id="tab-send" style="display:block">'
+    +'<div class="panel-header"><h2>Send invitations</h2><p>Add your guests, then send each one a personalized passport invitation.</p></div>'
+    +'<div class="kpi-row">'
+    +'<div class="kpi kpi-sent"><div class="kpi-n" id="cnt-sent">0</div><div class="kpi-l">Sent</div></div>'
+    +'<div class="kpi kpi-total"><div class="kpi-n" id="cnt-total">0</div><div class="kpi-l">Total guests</div></div>'
+    +'<div class="kpi kpi-pending"><div class="kpi-n" id="cnt-unsent">0</div><div class="kpi-l">Unsent</div></div>'
+    +'</div>'
+    +'<div class="send-bar">'
+    +'<button class="btn-send-all" id="btn-send-all" onclick="sendAll()">&#9654; Send all</button>'
+    +'<button onclick="addGuest()" style="padding:10px 14px;background:#fff;color:#3d1c1c;border:1.5px solid #3d1c1c;border-radius:8px;font-family:Cinzel,serif;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:1px">+ Guest</button>'
+    +'<button onclick="toggleBatch()" style="padding:10px 14px;background:#fff;color:#555;border:1px solid #ddd;border-radius:8px;font-family:Cinzel,serif;font-size:11px;cursor:pointer;letter-spacing:1px">&#8801; Batch</button>'
+    +'<button onclick="exportGuestCSV()" style="padding:10px 14px;background:#fff;color:#555;border:1px solid #ddd;border-radius:8px;font-family:Cinzel,serif;font-size:11px;cursor:pointer;letter-spacing:1px">&#8681; CSV</button>'
+    +'<div id="status" class="status-box"></div>'
+    +'</div>'
+    // Batch import panel
+    +'<div id="batch-panel" style="display:none;background:#f8f4ee;border:1px solid #ddd;border-radius:8px;padding:12px;margin-bottom:12px">'
+    +'<div style="font-size:11px;color:#666;margin-bottom:6px;font-weight:700">Paste guest list — one per line: <code style="background:#ede8d8;padding:1px 4px;border-radius:3px">Name, email@example.com</code></div>'
+    +'<textarea id="batch-input" rows="5" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:monospace;resize:vertical" placeholder="Maria Santos, maria@gmail.com&#10;Jose Reyes, jose@gmail.com&#10;Ana Cruz, ana@yahoo.com"></textarea>'
+    +'<div style="display:flex;gap:8px;margin-top:8px">'
+    +'<button onclick="importBatch()" style="padding:8px 16px;background:#3d1c1c;color:#c8aa50;border:none;border-radius:6px;font-family:Cinzel,serif;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:1px">Import</button>'
+    +'<button onclick="toggleBatch()" style="padding:8px 14px;background:#fff;color:#888;border:1px solid #ddd;border-radius:6px;font-size:11px;cursor:pointer">Cancel</button>'
+    +'<div id="batch-status" style="font-size:11px;color:#2d6a4f;align-self:center"></div>'
+    +'</div>'
+    +'</div>'
+    +'<div class="guest-list" id="glist"></div>'
+    +'</div>\n'
+
+    // RSVP TRACKER TAB
+    +'<div class="tab-panel" id="tab-rsvp">'
+    +'<div class="panel-header"><h2>RSVP Tracker</h2><p>Track attendance for <strong>'+mainTitle+'</strong></p></div>'
+    +'<div class="kpi-row">'
+    +'<div class="kpi kpi-attend"><div class="kpi-n" id="rsvp-ca">0</div><div class="kpi-l">Attending</div></div>'
+    +'<div class="kpi kpi-decline"><div class="kpi-n" id="rsvp-cd">0</div><div class="kpi-l">Declined</div></div>'
+    +'<div class="kpi kpi-pending"><div class="kpi-n" id="rsvp-cp">0</div><div class="kpi-l">Pending</div></div>'
+    +'</div>'
+    +(siteUrl
+      ?'<div class="hint-box">&#10003; <strong>Auto-RSVP is active.</strong> When guests click Attend or Decline on their invitation, their status updates here automatically. You can also update manually below.</div>'
+      :'<div class="hint-box">When guests click <strong>I Will Attend</strong> or <strong>I Cannot Attend</strong>, their email app opens with a pre-filled reply to <strong>'+hostEmail+'</strong>. After receiving their reply, update the status below.</div>')
+    +'<div style="display:flex;justify-content:flex-end;margin-bottom:10px">'
+    +'<button onclick="exportRsvpCSV()" style="padding:7px 14px;background:#fff;color:#3d1c1c;border:1.5px solid #3d1c1c;border-radius:7px;font-family:Cinzel,serif;font-size:10px;font-weight:700;cursor:pointer;letter-spacing:.5px">&#8681; Export CSV</button>'
+    +'</div>'
+    +'<table>'
+    +'<thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Update</th></tr></thead>'
+    +'<tbody id="rsvp-body"></tbody>'
+    +'</table>'
+    +'</div>\n'
+
+    // PREVIEW TAB — per guest
+    +'<div class="tab-panel" id="tab-preview">'
+    +'<div class="panel-header"><h2>Invitation preview</h2><p>Select a guest to preview their personalized invitation.</p></div>'
+    +'<div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap">'
+    +'<select id="preview-guest-select" onchange="updatePreview()" style="flex:1;min-width:180px;padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:Lato,sans-serif">'
+    +'<option value="">— Sample Guest —</option>'
+    +'</select>'
+    +'<button onclick="downloadInvitation()" style="padding:8px 16px;background:#3d1c1c;color:#c8aa50;border:none;border-radius:6px;font-family:Cinzel,serif;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:1px;white-space:nowrap">&#8681; Download</button>'
+    +'</div>'
+    +'<div class="preview-wrap" id="preview-wrap"><div style="width:320px;height:460px;position:relative;margin:0 auto">'+passportPreviewHTML+'</div></div>'
+    +'</div>\n'
+
+    // Send confirmation modal
+    +'<div id="modal-send-confirm" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center">'
+    +'<div style="background:#fff;border-radius:12px;padding:24px 28px;max-width:360px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3)">'
+    +'<h3 style="font-family:Cinzel,serif;font-size:14px;color:#3d1c1c;letter-spacing:1px;margin-bottom:10px">&#9654; Send All Invitations</h3>'
+    +'<p style="font-size:12px;color:#555;line-height:1.6;margin-bottom:16px">You are about to send personalized passport invitations to <strong id="modal-send-count">0</strong> guests. This cannot be undone.</p>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end">'
+    +'<button onclick="document.getElementById(\'modal-send-confirm\').style.display=\'none\'" style="padding:9px 16px;background:#fff;color:#888;border:1px solid #ddd;border-radius:7px;font-size:12px;cursor:pointer">Cancel</button>'
+    +'<button onclick="document.getElementById(\'modal-send-confirm\').style.display=\'none\';sendAllConfirmed()" style="padding:9px 20px;background:#3d1c1c;color:#c8aa50;border:none;border-radius:7px;font-family:Cinzel,serif;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.5px">Send All</button>'
+    +'</div>'
+    +'</div>'
+    +'</div>'
+    +'<script>\n'+sendScript+'\n<\/script>\n'
+    +'</body>\n</html>';
+
+  // Download single file
+    var blob=new Blob([clientHTML],{type:'text/html'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;
+    a.download=mainTitle.replace(/[^a-zA-Z0-9]/g,'_').slice(0,30)+'_Invitation_Website.html';
+    a.click();
+    URL.revokeObjectURL(url);
+    btn.disabled=false;if(btn2)btn2.disabled=false;
+    st.className='status-msg success';
+    st.textContent='Downloaded! Upload this single HTML file to GitHub Pages.';
+  }catch(e){
+    btn.disabled=false;if(btn2)btn2.disabled=false;
+    st.className='status-msg error';
+    st.textContent='Error: '+e.message;
+  }
+}
+
+function ppNext(btn){var b=btn.closest('.pp-book');if(b&&b.ppNext)b.ppNext();}
+function ppPrev(btn){var b=btn.closest('.pp-book');if(b&&b.ppPrev)b.ppPrev();}
+
+// ── AUTO-SAVE DRAFT ─────────────────────────────────────────
+function saveDraft(){
+  var draft={
+    event:currentEvent,
+    design:currentDesign,
+    fields:{},
+    multiLists:{}
+  };
+  // Save all input/textarea/select values
+  document.querySelectorAll('input[id],textarea[id],select[id]').forEach(function(el){
+    if(el.id) draft.fields[el.id]=el.value;
+  });
+  // Save multiLists
+  Object.keys(multiLists).forEach(function(k){
+    draft.multiLists[k]=multiLists[k];
+  });
+  localStorage.setItem('pp_generator_draft',JSON.stringify(draft));
+  // Show saved indicator
+  var bar=document.getElementById('draft-bar');
+  var time=document.getElementById('draft-time');
+  if(bar){
+    bar.style.display='flex';
+    if(time) time.textContent='at '+new Date().toLocaleTimeString();
+  }
+}
+
+function restoreDraft(){
+  var raw=localStorage.getItem('pp_generator_draft');
+  if(!raw) return;
+  try{
+    var draft=JSON.parse(raw);
+    // Restore event
+    if(draft.event && EVENTS[draft.event]){
+      currentEvent=draft.event;
+      document.querySelectorAll('.event-btn').forEach(function(b){
+        b.classList.toggle('active',b.dataset.event===currentEvent);
+      });
+    }
+    // Restore design
+    if(draft.design && DESIGNS[draft.design]){
+      currentDesign=draft.design;
+      document.querySelectorAll('.design-btn').forEach(function(b){
+        b.classList.toggle('active',b.dataset.design===currentDesign);
+      });
+    }
+    // Restore fields
+    if(draft.fields){
+      Object.keys(draft.fields).forEach(function(id){
+        var el=document.getElementById(id);
+        if(el) el.value=draft.fields[id];
+      });
+    }
+    // Restore multiLists and re-render them
+    if(draft.multiLists){
+      Object.keys(draft.multiLists).forEach(function(k){
+        multiLists[k]=draft.multiLists[k];
+      });
+      // Re-render any visible multi-list containers
+      document.querySelectorAll('.multi-list-wrap').forEach(function(wrap){
+        var key=wrap.dataset.key;
+        if(key) refreshMultiField(key);
+      });
+    }
+    // Re-render fields for restored event
+    renderFields();
+    // Restore field values again (renderFields may have cleared them)
+    if(draft.fields){
+      Object.keys(draft.fields).forEach(function(id){
+        var el=document.getElementById(id);
+        if(el && !el.value) el.value=draft.fields[id];
+      });
+    }
+    // Show saved bar
+    var bar=document.getElementById('draft-bar');
+    var time=document.getElementById('draft-time');
+    if(bar){
+      bar.style.display='flex';
+      bar.style.background='#e8f4fd';
+      bar.style.borderColor='#b0d4f0';
+      bar.style.color='#2a5f8a';
+      if(time) time.textContent='(draft restored)';
+      setTimeout(function(){
+        if(bar){bar.style.background='#f0f8e8';bar.style.borderColor='#d4e8b0';bar.style.color='#5a7a2e';}
+      },3000);
+    }
+    refreshPreview();
+  }catch(e){ localStorage.removeItem('pp_generator_draft'); }
+}
+
+function clearDraft(){
+  if(!confirm('Clear all form fields and start fresh?')) return;
+  localStorage.removeItem('pp_generator_draft');
+  // Reset to defaults
+  currentEvent='birthday';
+  currentDesign='classic';
+  // Clear all inputs
+  document.querySelectorAll('input[id],textarea[id]').forEach(function(el){
+    if(el.type!=='button'&&el.type!=='submit') el.value='';
+  });
+  // Clear multiLists
+  Object.keys(multiLists).forEach(function(k){ multiLists[k]=[]; });
+  // Reset grids
+  renderEventGrid();
+  renderDesignGrid();
+  renderFields();
+  // Hide draft bar
+  var bar=document.getElementById('draft-bar');
+  if(bar) bar.style.display='none';
+  refreshPreview();
+}
+
+// Wire autosave to all inputs
+function wireAutoSave(){
+  document.querySelectorAll('input[id],textarea[id],select[id]').forEach(function(el){
+    el.addEventListener('input',autoSave);
+    el.addEventListener('change',autoSave);
+  });
+}
+
+renderEventGrid();
+renderDesignGrid();
+renderFields();
+wireAutoSave();
+restoreDraft();
+setTimeout(refreshPreview, 100);
+</script>
+</body>
+</html>

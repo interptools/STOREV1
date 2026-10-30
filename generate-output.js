@@ -19,7 +19,7 @@ if (!posB64Match) {
     process.exit(1);
 }
 const POS_B64 = posB64Match[1];
-console.log(`POS_B64 length: ${POS_B64.length}`);
+console.log('POS_B64 length: ' + POS_B64.length);
 
 // Extract dashboard template
 const dashboardMatch = builderContent.match(/<script id="dashboard-template" type="text\/template">([\s\S]+?)<\/script>/);
@@ -28,7 +28,7 @@ if (!dashboardMatch) {
     process.exit(1);
 }
 let dashboardHtml = dashboardMatch[1];
-console.log(`Dashboard template length: ${dashboardHtml.length}`);
+console.log('Dashboard template length: ' + dashboardHtml.length);
 
 // Fast native decode (same as builder: decodeURIComponent(escape(atob())))
 function decodePos(b64) {
@@ -36,7 +36,7 @@ function decodePos(b64) {
 }
 
 let pos = decodePos(POS_B64);
-console.log(`Decoded POS length: ${pos.length}`);
+console.log('Decoded POS length: ' + pos.length);
 
 // Configuration (matching what would be entered in the builder UI)
 const cfg = {
@@ -71,7 +71,7 @@ pos = pos.replace(/<title>[^<]*<\/title>/, '<title>' + cfg.name + ' POS</title>'
 // 2. Store name in titlebar
 pos = pos.replace(/>My Store POS<\/span>/, '>' + cfg.name + ' POS</span>');
 
-// 3. STORE defaults object
+// 3. STORE defaults object - REPLACE template's default (POS_B64 uses old pos_ keys)
 const storeObj = {
     name:   cfg.name,
     addr:   cfg.addr   || '',
@@ -82,18 +82,30 @@ const storeObj = {
     themeColor: cfg.themeColor || '#1a3a5c',
     mode:   cfg.bizType === 'retail' ? 'sari' : (cfg.bizType || 'super'),
     multi:  cfg.multi || false,
-    tillId: cfg.sbTill || 'TILL-01'
+    tillId: cfg.sbTill || 'TILL-01',
+    serial: cfg.serial || '',
+    min:    cfg.minNo  || '',
+    permit: cfg.permit || '',
+    vatReg: cfg.vatReg || 'vat',
+    till:   cfg.till   || 'TILL-01',
+    retDays: (cfg.retDays===undefined||cfg.retDays==='') ? 7 : parseInt(cfg.retDays),
+    uiScale: parseFloat(cfg.uiScale) || 1,
+    emoji:  cfg.emoji  || ''
 };
+// POS_B64 uses old 'pos_store' key - match the exact pattern
+pos = pos.replace(
+    /LS\.get\('pos_store',\s*\{[\s\S]*?\}\)/,
+    "LS.get('pos_store'," + JSON.stringify(storeObj) + ")"
+);
 
-// Inject STORE object before POS's own STORE declaration
-const storeScript = 'var STORE = ' + JSON.stringify(storeObj, null, 2) + ';\n';
-pos = injectJs(pos, storeScript);
+// 4. Products array - REPLACE template's default (POS_B64 uses old pos_ keys)
+const prodsJson = JSON.stringify(cfg.products);
+pos = pos.replace(
+    /LS\.get\('pos_prods',\[\]\)/,
+    "LS.get('pos_prods'," + prodsJson + ")"
+);
 
-// 4. Products array (empty for now, would come from CSV)
-const prodsScript = 'var PRODUCTS = [];\n';
-pos = injectJs(pos, prodsScript);
-
-// 5. Users array with PIN hashing (FNV-1a)
+// 5. Users array with PIN hashing (FNV-1a) - REPLACE template's default (POS_B64 uses old pos_ keys)
 const SALT = 'MyStorePOS2024';
 function fnv1a(str) {
     let hash = 0x811c9dc5;
@@ -104,14 +116,27 @@ function fnv1a(str) {
     return hash.toString(16).padStart(8, '0');
 }
 
-const usersWithHash = cfg.users.map(u => ({
-    ...u,
-    pinHash: fnv1a(u.pin + SALT)
-}));
-const usersScript = 'var USERS = ' + JSON.stringify(usersWithHash, null, 2) + ';\n';
-pos = injectJs(pos, usersScript);
+const usersWithHash = cfg.users.map(function(u) {
+    return Object.assign({}, u, {
+        pinHash: fnv1a(u.pin + SALT)
+    });
+});
+pos = pos.replace(
+    /LS\.get\('pos_users',\s*\[[\s\S]*?\]\)/,
+    "LS.get('pos_users'," + JSON.stringify(usersWithHash) + ")"
+);
 
-// 6. Multi-till config
+// Also remove the fallback user list (same as builder)
+pos = pos.replace(
+    "  return u.length ? u : [\n" +
+    "    {id:1,name:'Admin',role:'Manager',pin:'1234',color:'#8e44ad'},\n" +
+    "    {id:2,name:'Cashier 1',role:'Cashier',pin:'1111',color:'#1a5c8a'},\n" +
+    "    {id:3,name:'Cashier 2',role:'Cashier',pin:'2222',color:'#1a6e3a'},\n" +
+    "  ];",
+    "  return u;"
+);
+
+// 6. Multi-till config - inject as script
 const multiScript = 'var MULTI_TILL = ' + JSON.stringify({
     enabled: cfg.multi,
     tillId: cfg.sbTill || 'TILL-01'
@@ -119,13 +144,12 @@ const multiScript = 'var MULTI_TILL = ' + JSON.stringify({
 pos = injectJs(pos, multiScript);
 
 // 7. Branding CSS variables
-const brandingCss = `
-:root {
-    --brand-primary: ${cfg.themeColor};
-    --brand-bg: ${cfg.themeColor}15;
-    --brand-border: ${cfg.themeColor}40;
-}
-`;
+const brandingCss =
+':root {\n' +
+'    --brand-primary: ' + cfg.themeColor + ';\n' +
+'    --brand-bg: ' + cfg.themeColor + '15;\n' +
+'    --brand-border: ' + cfg.themeColor + '40;\n' +
+'}';
 const styleInject = '<style id="nt-branding">' + brandingCss + '</style>';
 pos = pos.replace('</head>', styleInject + '\n</head>');
 
@@ -161,6 +185,7 @@ const dashboardBtnScript = '\n<script>\n' +
 pos = pos.replace('</body>', dashboardBtnScript + '\n</body>');
 
 // 10. Fix namespace patterns in POS template (multi-till architecture)
+// Replace direct pos_ key usage with LS.sharedKey()/LS.tillKey() patterns
 const namespaceFixes = [
     { from: "LS.get('pos_store'", to: "LS.get(LS.sharedKey('store')" },
     { from: "LS.get('pos_users'", to: "LS.get(LS.sharedKey('users')" },
@@ -205,11 +230,9 @@ const namespaceFixes = [
     { from: "LS.set('pos_pickhide'", to: "LS.set(LS.tillKey('pickhide')" },
     { from: "LS.set('pos_stocklogs'", to: "LS.set(LS.tillKey('stocklogs')" }
 ];
-
 namespaceFixes.forEach(function(fix) {
     pos = pos.split(fix.from).join(fix.to);
 });
-
 console.log('Applied 56 namespace fixes');
 
 // 11. Remove hardcoded 'TILL-01' fallbacks - use STORE.till instead
@@ -220,22 +243,22 @@ console.log('Removed hardcoded TILL-01 fallbacks');
 // Write POS output
 const posOutputPath = path.join(outputDir, 'index.html');
 fs.writeFileSync(posOutputPath, pos, 'utf8');
-console.log(`Written POS to: ${posOutputPath} (${pos.length} bytes)`);
+console.log('Written POS to: ' + posOutputPath + ' (' + pos.length + ' bytes)');
 
 // Write Dashboard output
 const dashboardOutputPath = path.join(outputDir, 'dashboard.html');
 fs.writeFileSync(dashboardOutputPath, dashboardHtml, 'utf8');
-console.log(`Written Dashboard to: ${dashboardOutputPath} (${dashboardHtml.length} bytes)`);
+console.log('Written Dashboard to: ' + dashboardOutputPath + ' (' + dashboardHtml.length + ' bytes)');
 
 // Verify no hardcoded 'till-1' in POS
 const till1Matches = pos.match(/till-1/gi);
 if (till1Matches) {
-    console.warn(`WARNING: Found ${till1Matches.length} occurrences of 'till-1' in POS output`);
+    console.warn('WARNING: Found ' + till1Matches.length + ' occurrences of "till-1" in POS output');
     // Show context
     const lines = pos.split('\n');
-    lines.forEach((line, i) => {
+    lines.forEach(function(line, i) {
         if (/till-1/i.test(line)) {
-            console.warn(`  Line ${i+1}: ${line.trim().slice(0, 150)}`);
+            console.warn('  Line ' + (i+1) + ': ' + line.trim().slice(0, 150));
         }
     });
 } else {

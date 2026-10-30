@@ -1036,8 +1036,7 @@ function generateApp() {
           uiScale: parseFloat(cfg.uiScale) || 1,
           emoji:  cfg.emoji  || ''
         };
-        var storeJsonStr = JSON.stringify(JSON.stringify(storeObj));
-        // Replace the LS.get('pos_store',{...}) default
+        // Replace the LS.get('pos_store',{...}) default (POS_B64 uses old pos_ keys)
         pos = pos.replace(
           /LS\.get\('pos_store',\s*\{[\s\S]*?\}\)/,
           "LS.get('pos_store'," + JSON.stringify(storeObj) + ")"

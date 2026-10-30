@@ -317,13 +317,11 @@ td.r{text-align:right}
   @page{margin:4mm;size:auto}
 }
 </style>
-<style id="nt-branding">
-:root {
+<style id="nt-branding">:root {
     --brand-primary: #1a3a5c;
     --brand-bg: #1a3a5c15;
     --brand-border: #1a3a5c40;
-}
-</style>
+}</style>
 </head>
 <body>
 <!-- ══ CSV PRODUCT IMPORT ══════════════════════════════════════ -->
@@ -785,20 +783,11 @@ const LS = {
 };
 
 let USERS = (()=>{
-  const u = LS.get(LS.sharedKey('users'),[]);
-  return u.length ? u : [
-    {id:1,name:'Admin',role:'Manager',pin:'1234',color:'#8e44ad'},
-    {id:2,name:'Cashier 1',role:'Cashier',pin:'1111',color:'#1a5c8a'},
-    {id:3,name:'Cashier 2',role:'Cashier',pin:'2222',color:'#1a6e3a'},
-  ];
+  const u = LS.get(LS.sharedKey('users'),[{"id":"1","name":"Owner","pin":"1234","role":"Manager","pinHash":"eeaea618"},{"id":"2","name":"Cashier","pin":"1234","role":"Cashier","pinHash":"eeaea618"}]);
+  return u;
 })();
 
-let STORE = LS.get(LS.sharedKey('store'),{
-  name:'MY STORE',
-  addr:'123 Main St., Your City',
-  tin:'000-000-000-000',
-  phrase:'This serves as your Official Receipt',
-});
+let STORE = LS.get(LS.sharedKey('store'),{"name":"MyStore","addr":"123 Main St, Manila, Philippines","tin":"000-000-000-000","phrase":"This serves as your Official Receipt","logo":"","initials":"M","themeColor":"#1a3a5c","mode":"super","multi":true,"tillId":"TILL-01","serial":"","min":"","permit":"","vatReg":"vat","till":"TILL-01","retDays":7,"uiScale":1,"emoji":""});
 /* ---- defaults for fields added after v1 (safe for old saved data) ---- */
 STORE.serial   = STORE.serial   || '';
 STORE.min      = STORE.min      || '';
@@ -3813,41 +3802,6 @@ function updateRawCatFilter(){
     }
   });
 }
-
-
-var STORE = {
-  "name": "MyStore",
-  "addr": "123 Main St, Manila, Philippines",
-  "tin": "000-000-000-000",
-  "phrase": "This serves as your Official Receipt",
-  "logo": "",
-  "initials": "M",
-  "themeColor": "#1a3a5c",
-  "mode": "super",
-  "multi": true,
-  "tillId": "TILL-01"
-};
-
-
-var PRODUCTS = [];
-
-
-var USERS = [
-  {
-    "id": "1",
-    "name": "Owner",
-    "pin": "1234",
-    "role": "Manager",
-    "pinHash": "eeaea618"
-  },
-  {
-    "id": "2",
-    "name": "Cashier",
-    "pin": "1234",
-    "role": "Cashier",
-    "pinHash": "eeaea618"
-  }
-];
 
 
 var MULTI_TILL = {
